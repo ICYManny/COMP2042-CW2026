@@ -15,8 +15,10 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>25.0.1</javafx.version>
-        <!-- Main class (package "resources" matches the original project layout) -->
+        <!-- JavaFX application class, used by "mvnw javafx:run" -->
         <mainClass>com.comp2042.Main</mainClass>
+        <!-- Plain launcher used by the runnable jar (see Launcher.java) -->
+        <launcherClass>com.comp2042.Launcher</launcherClass>
     </properties>
 
     <dependencies>
@@ -84,7 +86,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>${mainClass}</mainClass>
+                                    <mainClass>${launcherClass}</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
