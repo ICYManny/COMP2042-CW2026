@@ -11,6 +11,7 @@ public class Obstacle {
     private ArrayList<Point> obstacles = new ArrayList<>();
     private int x;
     private int y;
+    private static final int SAFE_DISTANCE = 3;
 
     public Obstacle(int x, int y) {
        this.x = x;
@@ -25,10 +26,20 @@ public class Obstacle {
         Point p;
         for (int i=0; i<amount; i++) {
             do {
-                p = new Point(rnd.nextInt(x) + 1, rnd.nextInt(y));
-            } while (coin.getPos().equals(p) || snek.getBody().contains(p) || snek.getHead().equals(p));
+                p = new Point(rnd.nextInt(x), rnd.nextInt(y));
+            } while (coin.getPos().equals(p) || snek.getBody().contains(p) || snek.getHead().equals(p)
+                    || obstacles.contains(p) || tooCloseToHead(snek, p));
             obstacles.add(p);
         }
+    }
+
+    /**
+     * Checks whether a cell is within the safe zone around the snake's head, so a new
+     * obstacle can never appear directly in front of the player and kill them instantly.
+     */
+    private boolean tooCloseToHead(Snake snek, Point p) {
+        Point head = snek.getHead();
+        return Math.abs(head.x - p.x) + Math.abs(head.y - p.y) < SAFE_DISTANCE;
     }
 
     public Color getColor() {
