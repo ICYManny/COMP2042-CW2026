@@ -26,12 +26,7 @@ public class GameController {
     public static KeyCode lastKey = KeyCode.LEFT;
     private boolean keyPressed = false;
 
-    private int legacyScoreMultiplier = 2;
 
-    private void calculateBonusScore() {
-        int bonus = game.getScorePoints() * legacyScoreMultiplier;
-        System.out.println("Bonus score: " + bonus);
-    }
 
     public GameController(Snake snek, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
         this.snek = snek;
