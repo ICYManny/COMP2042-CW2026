@@ -2,14 +2,13 @@ package com.comp2042;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.paint.Color;
+
 
 import java.awt.*;
 import java.util.ArrayList;
 
 public class Snake {
-    private Color headColor = Color.web("2eb872");
-    private Color bodyColor = Color.web("a3de83");
+
     private boolean dead = false;
     private final Point head = new Point();
     private final ArrayList<Point> body = new ArrayList<>();
@@ -123,13 +122,7 @@ public class Snake {
         return new Point(head);
     }
 
-    public Color getHeadColor() {
-        return headColor;
-    }
 
-    public Color getBodyColor() {
-        return bodyColor;
-    }
 
     public boolean getDead() {
         return dead;

@@ -5,12 +5,11 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
+
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.File;
+
 import java.util.Random;
 
 public class GameController {
@@ -19,19 +18,14 @@ public class GameController {
     private GameView gameView;
     private Game game;
     private Stage stage;
-    private String coinSoundPath = "resources/views/res/coinSound.wav";
+
     private Obstacle obstacle;
 
     public static KeyCode key = KeyCode.LEFT;
     public static KeyCode lastKey = KeyCode.LEFT;
     private boolean keyPressed = false;
 
-    private int legacyScoreMultiplier = 2;
 
-    private void calculateBonusScore() {
-        int bonus = game.getScorePoints() * legacyScoreMultiplier;
-        System.out.println("Bonus score: " + bonus);
-    }
 
     public GameController(Snake snek, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
         this.snek = snek;
@@ -64,7 +58,7 @@ public class GameController {
                 powerCoin();
                 game.incScore();
                 if (game.gameWon()) {
-                    gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+                    gameView.drawGrid(coin, snek, obstacle);
                     return;
                 }
                 newCoin();
@@ -73,7 +67,7 @@ public class GameController {
             keyPressed = false;
 
             if (!snek.getDead() || snek.hitSelf()) {
-                gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+                gameView.drawGrid(coin, snek, obstacle);
             }
 
             gameView.gameWon();
@@ -143,7 +137,6 @@ public class GameController {
         snek = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
 
-        int unusedObstacleCount = new Random().nextInt(game.getWidth() * game.getHeight() / 20) + 3;
 
         animation.setRate(game.getSpeed());
         key = KeyCode.LEFT;
@@ -155,7 +148,7 @@ public class GameController {
         gameView.gameOver(snek);
         gameView.updateScoreLabel();
 
-        gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+        gameView.drawGrid(coin, snek, obstacle);
     }
 
     private void powerCoin() {
