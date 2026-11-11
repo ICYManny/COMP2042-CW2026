@@ -42,11 +42,11 @@ public class MainMenuController {
         gameScene.setOnKeyPressed(controller::handle);
 
         gameView.makeScene(gameScene, snake, coin, obstacle);
-        gamePane.getChildren().addAll(gameView.gridCanvas, gameView.gameOverLabel, gameView.gameWonLabel, gameView.scoreLabel);
+        gamePane.getChildren().addAll(gameView.getCanvas(), gameView.getGameOverLabel(), gameView.getGameWonLabel(), gameView.getScoreLabel());
         gamePane.setPadding(new Insets(20));
-        gamePane.setAlignment(gameView.gameOverLabel, Pos.TOP_CENTER);
-        gamePane.setAlignment(gameView.gameWonLabel, Pos.TOP_CENTER);
-        gamePane.setAlignment(gameView.scoreLabel, Pos.BOTTOM_CENTER);
+        StackPane.setAlignment(gameView.getGameOverLabel(), Pos.TOP_CENTER);
+        StackPane.setAlignment(gameView.getGameWonLabel(), Pos.TOP_CENTER);
+        StackPane.setAlignment(gameView.getScoreLabel(), Pos.BOTTOM_CENTER);
     }
 
     public ViewManager getViewManager() {

@@ -16,12 +16,16 @@ import java.awt.*;
 
 public class GameView {
 
-    public Canvas gridCanvas;
-    public GraphicsContext gc;
+    private static final String LARGE_LABEL_STYLE = "-fx-font-size: 50;";
+    private static final String LARGE_SCORE_STYLE = "-fx-font-size: 35;";
+    private static final String SMALL_LABEL_STYLE = "-fx-font-size: 15;";
 
-    public Label gameOverLabel;
-    public Label gameWonLabel;
-    public Label scoreLabel;
+    private Canvas gridCanvas;
+    private GraphicsContext gc;
+
+    private Label gameOverLabel;
+    private Label gameWonLabel;
+    private Label scoreLabel;
     private boolean gameOverVis = false;
     private boolean gameWonVis = false;
 
@@ -86,6 +90,9 @@ public class GameView {
 
         gameOverLabel.setFont(new Font("Arial", 25 * fullScale));
         gameWonLabel.setFont(new Font("Arial", 25 * fullScale));
+        gameOverLabel.setStyle(fullScreen ? LARGE_LABEL_STYLE : SMALL_LABEL_STYLE);
+        gameWonLabel.setStyle(fullScreen ? LARGE_LABEL_STYLE : SMALL_LABEL_STYLE);
+        scoreLabel.setStyle(fullScreen ? LARGE_SCORE_STYLE : SMALL_LABEL_STYLE);
         drawGrid(coin, snake, obstacle);
     }
 
@@ -160,14 +167,14 @@ public class GameView {
         gc.drawImage(rotatedImage, (point.x * game.getCellSize()) * fullScale, (point.y * game.getCellSize()) * fullScale, game.getCellSize() * fullScale, game.getCellSize() * fullScale);
     }
 
-    public void turnDir(Snake snake) {
-        if ((GameController.lastKey == KeyCode.LEFT && GameController.key == KeyCode.UP) || (GameController.lastKey == KeyCode.DOWN && GameController.key == KeyCode.RIGHT)) {
+    public void turnDir(Snake snake, KeyCode lastKey, KeyCode key) {
+        if ((lastKey == KeyCode.LEFT && key == KeyCode.UP) || (lastKey == KeyCode.DOWN && key == KeyCode.RIGHT)) {
             turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 2;
-        } else if ((GameController.lastKey == KeyCode.LEFT && GameController.key == KeyCode.DOWN) || (GameController.lastKey == KeyCode.UP && GameController.key == KeyCode.RIGHT)) {
+        } else if ((lastKey == KeyCode.LEFT && key == KeyCode.DOWN) || (lastKey == KeyCode.UP && key == KeyCode.RIGHT)) {
             turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 3;
-        } else if ((GameController.lastKey == KeyCode.RIGHT && GameController.key == KeyCode.UP) || (GameController.lastKey == KeyCode.DOWN && GameController.key == KeyCode.LEFT)) {
+        } else if ((lastKey == KeyCode.RIGHT && key == KeyCode.UP) || (lastKey == KeyCode.DOWN && key == KeyCode.LEFT)) {
             turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 1;
-        } else if ((GameController.lastKey == KeyCode.UP && GameController.key == KeyCode.LEFT) || (GameController.lastKey == KeyCode.RIGHT && GameController.key == KeyCode.DOWN)) {
+        } else if ((lastKey == KeyCode.UP && key == KeyCode.LEFT) || (lastKey == KeyCode.RIGHT && key == KeyCode.DOWN)) {
             turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 4;
         } else turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 0;
     }
@@ -194,6 +201,26 @@ public class GameView {
 
     public void updateScoreLabel() {
         scoreLabel.setText("Score: " + game.getScore());
+    }
+
+    public Canvas getCanvas() {
+        return gridCanvas;
+    }
+
+    public GraphicsContext getGraphicsContext() {
+        return gc;
+    }
+
+    public Label getGameOverLabel() {
+        return gameOverLabel;
+    }
+
+    public Label getGameWonLabel() {
+        return gameWonLabel;
+    }
+
+    public Label getScoreLabel() {
+        return scoreLabel;
     }
 
 }

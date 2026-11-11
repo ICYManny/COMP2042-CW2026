@@ -21,8 +21,8 @@ public class GameController {
 
     private Obstacle obstacle;
 
-    public static KeyCode key = KeyCode.LEFT;
-    public static KeyCode lastKey = KeyCode.LEFT;
+    private KeyCode key = KeyCode.LEFT;
+    private KeyCode lastKey = KeyCode.LEFT;
     private boolean keyPressed = false;
 
 
@@ -83,7 +83,7 @@ public class GameController {
             lastKey = key;
             key = event.getCode();
             keyPressed = true;
-            gameView.turnDir(snake);
+            gameView.turnDir(snake, lastKey, key);
         }
 
         if (event.getCode().equals(KeyCode.P)) {
@@ -92,21 +92,15 @@ public class GameController {
 
         if (event.getCode().equals(KeyCode.TAB)) {
             reset();
-            gameView.scoreLabel.setText("Score: " + game.getScore());
+            gameView.updateScoreLabel();
         }
 
         if (event.getCode() == KeyCode.PLUS || event.getCode() == KeyCode.EQUALS || event.getCode() == KeyCode.ADD) {
             gameView.scaleToFullscreen(true, stage, obstacle, snake, coin);
-            gameView.gameOverLabel.setStyle("-fx-font-size: 50;");
-            gameView.gameWonLabel.setStyle("-fx-font-size: 50;");
-            gameView.scoreLabel.setStyle("-fx-font-size: 35;");
         }
 
         if (event.getCode() == KeyCode.MINUS || event.getCode() == KeyCode.SUBTRACT) {
             gameView.scaleToFullscreen(false, stage, obstacle, snake, coin);
-            gameView.gameOverLabel.setStyle("-fx-font-size: 15;");
-            gameView.gameWonLabel.setStyle("-fx-font-size: 15;");
-            gameView.scoreLabel.setStyle("-fx-font-size: 15;");
         }
 
         if (event.getCode().equals(KeyCode.ESCAPE)) {
