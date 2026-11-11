@@ -9,7 +9,7 @@ public class Coin {
     private Point pos;
     private Image image = new Image("resources/views/res/redcoin.png");
 
-    public Coin(int x, int y, Snake snek, Obstacle obstacle) {
+    public Coin(int x, int y, Snake snake, Obstacle obstacle) {
         int tx;
         int ty;
         do {
@@ -18,10 +18,10 @@ public class Coin {
             tx = rnd.nextInt(x);
             ty = rnd.nextInt(y);
             pos = new Point(tx, ty);
-        } while (snek.getHead().equals(pos) || snek.getBody().contains(pos) || obstacle.getObstacles().contains(pos));
+        } while (snake.getHead().equals(pos) || snake.getBody().contains(pos) || obstacle.getObstacles().contains(pos));
     }
 
-    public Point getPos() {
+    public Point getPosition() {
         return new Point(pos);
     }
 

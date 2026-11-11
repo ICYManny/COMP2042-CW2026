@@ -20,7 +20,7 @@ public class ViewManager {
     public ViewManager() {
     }
 
-    public void initalizeMainMenu() {
+    public void initializeMainMenu() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(Main.class.getResource("/resources/views/MainMenu.fxml"));

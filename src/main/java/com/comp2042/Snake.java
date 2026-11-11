@@ -100,10 +100,10 @@ public class Snake {
     }
 
     public boolean ateCoin(Coin coin) {
-        if (!head.equals(coin.getPos())) {
+        if (!head.equals(coin.getPosition())) {
             body.remove(0);
         }
-        return head.equals(coin.getPos());
+        return head.equals(coin.getPosition());
     }
 
     private boolean borderControl() {
@@ -124,11 +124,11 @@ public class Snake {
 
 
 
-    public boolean getDead() {
+    public boolean isDead() {
         return dead;
     }
 
-    public void ignoreBorders(boolean ign) {
+    public void setIgnoreBorders(boolean ign) {
         ignoreBorders = ign;
     }
 
