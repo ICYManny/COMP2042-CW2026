@@ -3,49 +3,53 @@ package com.comp2042;
 import javafx.scene.paint.Color;
 
 public class Game {
-    private Color color = Color.web("feffe4");
-    private int width;
-    private int height;
+    private static final Color BACKGROUND_COLOR = Color.web("feffe4");
+    private static final double NORMAL_SPEED = 8.5;
+    private static final double HARD_SPEED = 13;
+    private static final int LARGE_GRID_HEIGHT = 50;
+    private static final double SMALL_CELL_SIZE = 10;
+    private static final double LARGE_CELL_SIZE = 20;
+    /** The snake starts with two segments, so two cells can never hold a coin. */
+    private static final int STARTING_LENGTH = 2;
+
+    private final int width;
+    private final int height;
+    private int coinsEaten;
+    private int maxCoins;
+    private final double cellSize;
     private int score;
-    private int maxScore;
-    private double multiplier;
-    private int scorePoints;
     private double speed;
-    private boolean powerUp;
+    private final boolean powerUp;
     private boolean noBorder;
 
     public Game(int x, int y, boolean powerUp, char difficulty) {
         if (difficulty == 'E') {
-            speed = 8.5;
+            speed = NORMAL_SPEED;
             noBorder = true;
         } else if (difficulty == 'N') {
-            speed = 8.5;
+            speed = NORMAL_SPEED;
             noBorder = false;
         } else if (difficulty == 'H') {
-            speed = 13;
+            speed = HARD_SPEED;
             noBorder = false;
         }
         this.powerUp = powerUp;
         width = x;
         height = y;
-        maxScore = x * y - 2;
-        if (height > 50) {
-            multiplier = 10;
-        } else {
-            multiplier = 20;
-        }
+        maxCoins = x * y - STARTING_LENGTH;
+        cellSize = height > LARGE_GRID_HEIGHT ? SMALL_CELL_SIZE : LARGE_CELL_SIZE;
     }
 
     public boolean gameWon() {
-        return score == maxScore;
+        return coinsEaten == maxCoins;
     }
 
-    public void incScore() {
-        score++;
+    public void incrementCoinsEaten() {
+        coinsEaten++;
     }
 
-    public void decMaxScore(int num) {
-        this.maxScore -= (num - 1);
+    public void reduceMaxCoins(int obstacleCount) {
+        this.maxCoins -= (obstacleCount - 1);
     }
 
     public int getWidth() {
@@ -57,24 +61,24 @@ public class Game {
     }
 
     public void resetScore() {
+        coinsEaten = 0;
         score = 0;
-        scorePoints = 0;
     }
 
     public Color getColor() {
-        return color;
+        return BACKGROUND_COLOR;
     }
 
-    public double getMultiplier() {
-        return multiplier;
+    public double getCellSize() {
+        return cellSize;
     }
 
     public void addPoints(int n) {
-        scorePoints += n;
+        score += n;
     }
 
-    public int getScorePoints() {
-        return scorePoints;
+    public int getScore() {
+        return score;
     }
 
     public boolean isPowerUp() {
