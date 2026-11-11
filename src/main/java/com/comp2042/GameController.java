@@ -21,8 +21,8 @@ public class GameController {
 
     private Obstacle obstacle;
 
-    private KeyCode key = KeyCode.LEFT;
-    private KeyCode lastKey = KeyCode.LEFT;
+    private Direction direction = Direction.LEFT;
+    private Direction lastDirection = Direction.LEFT;
     private boolean keyPressed = false;
 
 
@@ -44,15 +44,7 @@ public class GameController {
             return;
         } else {
 
-            if (key.equals(KeyCode.LEFT)) {
-                snake.move('L');
-            } else if (key.equals(KeyCode.RIGHT)) {
-                snake.move('R');
-            } else if (key.equals(KeyCode.UP)) {
-                snake.move('U');
-            } else if (key.equals(KeyCode.DOWN)) {
-                snake.move('D');
-            }
+            snake.move(direction);
 
             if (!snake.isDead() && snake.ateCoin(coin)) {
                 applyCoinEffect();
@@ -79,11 +71,12 @@ public class GameController {
     public void handle(KeyEvent event) {
         if (event.getCode().isArrowKey()) animation.play();
 
-        if (isValidTurn(event.getCode()) && !keyPressed) {
-            lastKey = key;
-            key = event.getCode();
+        Direction requested = directionFor(event.getCode());
+        if (requested != null && isValidTurn(requested) && !keyPressed) {
+            lastDirection = direction;
+            direction = requested;
             keyPressed = true;
-            gameView.turnDir(snake, lastKey, key);
+            gameView.turnDir(snake, lastDirection, direction);
         }
 
         if (event.getCode().equals(KeyCode.P)) {
@@ -105,22 +98,25 @@ public class GameController {
 
         if (event.getCode().equals(KeyCode.ESCAPE)) {
             animation.stop();
-            key = KeyCode.LEFT;
-            lastKey = KeyCode.LEFT;
+            direction = Direction.LEFT;
+            lastDirection = Direction.LEFT;
             Main.getViewManager().getPrimaryStage().show();
             Main.getViewManager().getGameStage().close();
         }
     }
 
-    private boolean isValidTurn(KeyCode key) {
-        if (!key.isArrowKey()) return false;
-        else {
-            if (key.equals(KeyCode.LEFT)) if (!this.key.equals(KeyCode.RIGHT)) return true;
-            if (key.equals(KeyCode.RIGHT)) if (!this.key.equals(KeyCode.LEFT)) return true;
-            if (key.equals(KeyCode.DOWN)) if (!this.key.equals(KeyCode.UP)) return true;
-            if (key.equals(KeyCode.UP)) return !this.key.equals(KeyCode.DOWN);
-            return false;
-        }
+    private Direction directionFor(KeyCode code) {
+        return switch (code) {
+            case UP -> Direction.UP;
+            case DOWN -> Direction.DOWN;
+            case LEFT -> Direction.LEFT;
+            case RIGHT -> Direction.RIGHT;
+            default -> null;
+        };
+    }
+
+    private boolean isValidTurn(Direction requested) {
+        return !requested.isOpposite(direction);
     }
 
     private void reset() {
@@ -133,7 +129,8 @@ public class GameController {
 
 
         animation.setRate(game.getSpeed());
-        key = KeyCode.LEFT;
+        direction = Direction.LEFT;
+        lastDirection = Direction.LEFT;
         keyPressed = false;
         game.resetScore();
         obstacle.reset();

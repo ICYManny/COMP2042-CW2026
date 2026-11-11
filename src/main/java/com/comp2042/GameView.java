@@ -6,7 +6,6 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
@@ -119,7 +118,7 @@ public class GameView {
 
 
     private void drawHead(Snake snake) {
-        snake.getImageViewHead().setRotate(snake.getSnakeDir());
+        snake.getImageViewHead().setRotate(snake.getDirection().getAngle());
         SnapshotParameters params = new SnapshotParameters();
         params.setFill(Color.TRANSPARENT);
         Image rotatedImage = snake.getImageViewHead().snapshot(params, null);
@@ -129,7 +128,7 @@ public class GameView {
     private void drawBody(Snake snake, Point point, int index) {
         Image rotatedImage;
         if (snake.getBody().size() <= 1) {
-            snake.getImageViewTail().setRotate(snake.getSnakeDir());
+            snake.getImageViewTail().setRotate(snake.getDirection().getAngle());
             SnapshotParameters params = new SnapshotParameters();
             params.setFill(Color.TRANSPARENT);
             rotatedImage = snake.getImageViewTail().snapshot(params, null);
@@ -167,16 +166,20 @@ public class GameView {
         gc.drawImage(rotatedImage, (point.x * game.getCellSize()) * fullScale, (point.y * game.getCellSize()) * fullScale, game.getCellSize() * fullScale, game.getCellSize() * fullScale);
     }
 
-    public void turnDir(Snake snake, KeyCode lastKey, KeyCode key) {
-        if ((lastKey == KeyCode.LEFT && key == KeyCode.UP) || (lastKey == KeyCode.DOWN && key == KeyCode.RIGHT)) {
-            turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 2;
-        } else if ((lastKey == KeyCode.LEFT && key == KeyCode.DOWN) || (lastKey == KeyCode.UP && key == KeyCode.RIGHT)) {
-            turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 3;
-        } else if ((lastKey == KeyCode.RIGHT && key == KeyCode.UP) || (lastKey == KeyCode.DOWN && key == KeyCode.LEFT)) {
-            turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 1;
-        } else if ((lastKey == KeyCode.UP && key == KeyCode.LEFT) || (lastKey == KeyCode.RIGHT && key == KeyCode.DOWN)) {
-            turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 4;
-        } else turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = 0;
+    public void turnDir(Snake snake, Direction last, Direction current) {
+        int turn;
+        if ((last == Direction.LEFT && current == Direction.UP) || (last == Direction.DOWN && current == Direction.RIGHT)) {
+            turn = 2;
+        } else if ((last == Direction.LEFT && current == Direction.DOWN) || (last == Direction.UP && current == Direction.RIGHT)) {
+            turn = 3;
+        } else if ((last == Direction.RIGHT && current == Direction.UP) || (last == Direction.DOWN && current == Direction.LEFT)) {
+            turn = 1;
+        } else if ((last == Direction.UP && current == Direction.LEFT) || (last == Direction.RIGHT && current == Direction.DOWN)) {
+            turn = 4;
+        } else {
+            turn = 0;
+        }
+        turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = turn;
     }
 
     public void gameOver(Snake snake) {
