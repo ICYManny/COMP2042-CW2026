@@ -1,5 +1,6 @@
 package com.comp2042.view;
 
+import com.comp2042.util.ResourceLoader;
 import com.comp2042.controller.MainMenuController;
 import com.comp2042.model.Direction;
 import com.comp2042.model.Game;
@@ -56,7 +57,7 @@ public class GameView {
 
         gameOverLabel = new Label("GAME OVER");
         gameOverLabel.setId("gameOverLabel");
-        String css = "resources/views/styling.css";
+        String css = ResourceLoader.externalForm("/views/styling.css");
         gameOverLabel.getStylesheets().add(css);
         gameOverLabel.setVisible(false);
 
