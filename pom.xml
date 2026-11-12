@@ -16,9 +16,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>25.0.1</javafx.version>
         <!-- JavaFX application class, used by "mvnw javafx:run" -->
-        <mainClass>com.comp2042.Main</mainClass>
+        <mainClass>com.comp2042.app.Main</mainClass>
         <!-- Plain launcher used by the runnable jar (see Launcher.java) -->
-        <launcherClass>com.comp2042.Launcher</launcherClass>
+        <launcherClass>com.comp2042.app.Launcher</launcherClass>
     </properties>
 
     <dependencies>

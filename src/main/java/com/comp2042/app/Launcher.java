@@ -1,4 +1,4 @@
-package com.comp2042;
+package com.comp2042.app;
 
 /**
  * Plain entry point used by the runnable (shaded) jar.
