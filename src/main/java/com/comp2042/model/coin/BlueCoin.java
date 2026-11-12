@@ -1,4 +1,7 @@
-package com.comp2042;
+package com.comp2042.model.coin;
+
+import com.comp2042.model.Obstacle;
+import com.comp2042.model.Snake;
 
 import javafx.scene.image.Image;
 

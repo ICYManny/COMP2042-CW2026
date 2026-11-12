@@ -1,4 +1,6 @@
-package com.comp2042;
+package com.comp2042.model;
+
+import com.comp2042.model.coin.Coin;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;

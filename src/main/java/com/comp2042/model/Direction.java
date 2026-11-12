@@ -1,4 +1,4 @@
-package com.comp2042;
+package com.comp2042.model;
 
 /**
  * The four directions the snake can move in.
