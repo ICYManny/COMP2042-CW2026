@@ -1,20 +1,17 @@
 package com.comp2042.model.coin;
 
-import com.comp2042.util.ResourceLoader;
-import com.comp2042.model.Obstacle;
+import com.comp2042.model.Obstacles;
 import com.comp2042.model.Snake;
 
-import javafx.scene.image.Image;
 
 public class SilverCoin extends Coin {
-    private Image image = new Image(ResourceLoader.externalForm("/views/res/silvercoin.png"));
 
-    public SilverCoin(int x, int y, Snake snake, Obstacle obstacle) {
-        super(x, y, snake, obstacle);
+    public SilverCoin(int x, int y, Snake snake, Obstacles obstacles) {
+        super(x, y, snake, obstacles);
     }
 
-    public Image getImage() {
-        return image;
+    public String getSpriteKey() {
+        return "silvercoin";
     }
 
     public int getPoints() {

@@ -1,40 +1,32 @@
 package com.comp2042.model.coin;
 
-import com.comp2042.util.ResourceLoader;
-import com.comp2042.model.Obstacle;
+import com.comp2042.model.Obstacles;
+import com.comp2042.model.Position;
 import com.comp2042.model.Snake;
 
-import javafx.scene.image.Image;
-
-import java.awt.*;
 import java.util.Random;
 
 public class Coin {
-    private Point pos;
-    private Image image = new Image(ResourceLoader.externalForm("/views/res/redcoin.png"));
+    private final Position position;
 
-    public Coin(int x, int y, Snake snake, Obstacle obstacle) {
-        int tx;
-        int ty;
+    public Coin(int width, int height, Snake snake, Obstacles obstacles) {
+        Random rnd = new Random();
+        Position candidate;
         do {
-            Random rnd = new Random();
-
-            tx = rnd.nextInt(x);
-            ty = rnd.nextInt(y);
-            pos = new Point(tx, ty);
-        } while (snake.getHead().equals(pos) || snake.getBody().contains(pos) || obstacle.getObstacles().contains(pos));
+            candidate = new Position(rnd.nextInt(width), rnd.nextInt(height));
+        } while (snake.occupies(candidate) || obstacles.contains(candidate));
+        position = candidate;
     }
 
-    public Point getPosition() {
-        return new Point(pos);
+    public Position getPosition() {
+        return position;
     }
 
     public int getPoints() {
-        int points = 5;
-        return points;
+        return 5;
     }
 
-    public Image getImage() {
-        return image;
+    public String getSpriteKey() {
+        return "redcoin";
     }
 }

@@ -1,71 +1,30 @@
 package com.comp2042.controller;
 
-import com.comp2042.app.Main;
 import com.comp2042.app.ViewManager;
-import com.comp2042.model.Game;
-import com.comp2042.model.Obstacle;
-import com.comp2042.model.Snake;
-import com.comp2042.model.coin.Coin;
-import com.comp2042.view.GameView;
+import com.comp2042.model.Difficulty;
+import com.comp2042.model.GameSettings;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
-
+/**
+ * Handles the main menu buttons defined in MainMenu.fxml.
+ */
 public class MainMenuController {
 
-    private static final int X_VALUE = 20;
-    private static final int Y_VALUE = 20;
-    private static final boolean POWER_UP = true;
-    private static final char DIFFICULTY = 'N';
+    private static final int GRID_WIDTH = 20;
+    private static final int GRID_HEIGHT = 20;
+    private static final boolean POWER_UPS = true;
+    private static final Difficulty DIFFICULTY = Difficulty.NORMAL;
 
-    private Scene gameScene;
+    private final ViewManager viewManager;
 
-    private ViewManager viewManager = Main.getViewManager();
+    /**
+     * @param viewManager used to switch to the game screen
+     */
+    public MainMenuController(ViewManager viewManager) {
+        this.viewManager = viewManager;
+    }
 
+    /** Starts a game. Called by the Start button. */
     public void handleStart() {
-        viewManager.initGameStage();
-
-        Stage gameStage = viewManager.getGameStage();
-        launchSnake(gameStage);
-        gameStage.setScene(gameScene);
-        viewManager.getPrimaryStage().close();
-        gameStage.show();
-    }
-
-    private void launchSnake(Stage gameStage) {
-        Game game = new Game(X_VALUE, Y_VALUE, POWER_UP, DIFFICULTY);
-        Obstacle obstacle = new Obstacle(game.getWidth(), game.getHeight());
-        Snake snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
-        Coin coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
-
-        GameView gameView = new GameView(game);
-        GameController controller = new GameController(snake, coin, game, gameView, obstacle, gameStage);
-
-        StackPane gamePane = new StackPane();
-        gameScene = new Scene(gamePane, game.getWidth() * game.getCellSize(), game.getHeight() * game.getCellSize());
-
-        gameScene.setOnKeyPressed(controller::handle);
-
-        gameView.makeScene(gameScene, snake, coin, obstacle);
-        gamePane.getChildren().addAll(gameView.getCanvas(), gameView.getGameOverLabel(), gameView.getGameWonLabel(), gameView.getScoreLabel());
-        gamePane.setPadding(new Insets(20));
-        StackPane.setAlignment(gameView.getGameOverLabel(), Pos.TOP_CENTER);
-        StackPane.setAlignment(gameView.getGameWonLabel(), Pos.TOP_CENTER);
-        StackPane.setAlignment(gameView.getScoreLabel(), Pos.BOTTOM_CENTER);
-    }
-
-    public ViewManager getViewManager() {
-        return viewManager;
-    }
-
-    public static int getxValue() {
-        return X_VALUE;
-    }
-
-    public static int getyValue() {
-        return Y_VALUE;
+        viewManager.showGame(new GameSettings(GRID_WIDTH, GRID_HEIGHT, POWER_UPS, DIFFICULTY));
     }
 }

@@ -1,237 +1,220 @@
 package com.comp2042.view;
 
-import com.comp2042.util.ResourceLoader;
-import com.comp2042.controller.MainMenuController;
 import com.comp2042.model.Direction;
-import com.comp2042.model.Game;
-import com.comp2042.model.Obstacle;
-import com.comp2042.model.Snake;
+import com.comp2042.model.GameModel;
+import com.comp2042.model.Position;
 import com.comp2042.model.coin.Coin;
+import com.comp2042.util.ResourceLoader;
 
-import javafx.scene.Scene;
-import javafx.scene.SnapshotParameters;
+import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.Screen;
-import javafx.stage.Stage;
 
-import java.awt.*;
+import java.util.List;
 
+/**
+ * Draws a {@link GameModel} onto a canvas, with the score and end-of-game labels on top.
+ * The view only reads the model; it never changes game state.
+ */
 public class GameView {
+
+    private static final Color BACKGROUND_COLOR = Color.web("feffe4");
+    private static final Color OBSTACLE_COLOR = Color.BLACK;
+    private static final int LARGE_GRID_HEIGHT = 50;
+    private static final double SMALL_CELL_SIZE = 10;
+    private static final double LARGE_CELL_SIZE = 20;
+    private static final double COIN_MARGIN = 3;
 
     private static final String LARGE_LABEL_STYLE = "-fx-font-size: 50;";
     private static final String LARGE_SCORE_STYLE = "-fx-font-size: 35;";
     private static final String SMALL_LABEL_STYLE = "-fx-font-size: 15;";
 
-    private Canvas gridCanvas;
-    private GraphicsContext gc;
+    private static final String HEAD_SPRITE = "snakehead";
+    private static final String BODY_SPRITE = "snakebody";
+    private static final String TURN_SPRITE = "snaketurnleft";
+    private static final String TAIL_SPRITE = "snaketail";
+    private static final double VERTICAL_ANGLE = 0;
+    private static final double HORIZONTAL_ANGLE = 270;
 
-    private Label gameOverLabel;
-    private Label gameWonLabel;
-    private Label scoreLabel;
-    private boolean gameOverVis = false;
-    private boolean gameWonVis = false;
+    private final GameModel model;
+    private final SpriteManager sprites = new SpriteManager();
+    private final double baseCellSize;
+    private double cellSize;
 
-    private Game game;
-    private double initX;
-    private double initY;
-    private double fullScale = 1;
-    private boolean fullsize = false;
-    private int[][] turnArray = new int[MainMenuController.getxValue()][MainMenuController.getyValue()];
+    private final StackPane root = new StackPane();
+    private final Canvas canvas;
+    private final GraphicsContext gc;
+    private final Label gameOverLabel = new Label("GAME OVER");
+    private final Label gameWonLabel = new Label("YOU WON!");
+    private final Label scoreLabel = new Label();
 
-    public GameView(Game game) {
-        this.game = game;
-    }
+    /**
+     * Builds the game screen for a model.
+     *
+     * @param model the game to draw
+     */
+    public GameView(GameModel model) {
+        this.model = model;
+        baseCellSize = model.getHeight() > LARGE_GRID_HEIGHT ? SMALL_CELL_SIZE : LARGE_CELL_SIZE;
+        cellSize = baseCellSize;
+        canvas = new Canvas(getPreferredWidth(), getPreferredHeight());
+        gc = canvas.getGraphicsContext2D();
 
-    public void makeScene(Scene scene, Snake snake, Coin coin, Obstacle obstacle) {
-        Scene gameScene = scene;
-        gridCanvas = new Canvas(gameScene.getWidth(), gameScene.getHeight());
-        initX = scene.getWidth();
-        initY = scene.getHeight();
-        gc = gridCanvas.getGraphicsContext2D();
-        drawGrid(coin, snake, obstacle);
-
-        gameOverLabel = new Label("GAME OVER");
-        gameOverLabel.setId("gameOverLabel");
         String css = ResourceLoader.externalForm("/views/styling.css");
-        gameOverLabel.getStylesheets().add(css);
-        gameOverLabel.setVisible(false);
-
-        gameWonLabel = new Label("YOU WON!");
+        root.getStylesheets().add(css);
+        gameOverLabel.setId("gameOverLabel");
         gameWonLabel.setId("gameWonLabel");
-        gameWonLabel.getStylesheets().add(css);
-        gameWonLabel.setVisible(false);
-
-        scoreLabel = new Label("Score: " + game.getScore());
         scoreLabel.setId("scoreLabel");
-        scoreLabel.getStylesheets().add(css);
-        scoreLabel.setFont(new Font("Arial", 20));
-        scoreLabel.setVisible(true);
+        root.getChildren().addAll(canvas, gameOverLabel, gameWonLabel, scoreLabel);
+        StackPane.setAlignment(gameOverLabel, Pos.TOP_CENTER);
+        StackPane.setAlignment(gameWonLabel, Pos.TOP_CENTER);
+        StackPane.setAlignment(scoreLabel, Pos.BOTTOM_CENTER);
+        render();
     }
 
-    public void scaleToFullscreen(boolean fullScreen, Stage primaryStage, Obstacle obstacle, Snake snake, Coin coin) {
-        primaryStage.setFullScreen(fullScreen);
+    /** @return the node to place in the game scene */
+    public Parent getRoot() {
+        return root;
+    }
 
-        double xScaling = Screen.getPrimary().getVisualBounds().getHeight() / initY;
-        double yScaling = Screen.getPrimary().getVisualBounds().getWidth() / initX;
+    /** @return window width needed to show the whole grid */
+    public double getPreferredWidth() {
+        return model.getWidth() * baseCellSize;
+    }
 
-        if (fullScreen && !fullsize) {
-            if (xScaling < yScaling) {
-                fullScale = xScaling;
-            } else {
-                fullScale = yScaling;
-            }
-            gridCanvas.setWidth(gridCanvas.getWidth() * fullScale);
-            gridCanvas.setHeight(gridCanvas.getHeight() * fullScale);
-            fullsize = true;
-        } else if (!fullScreen) {
-            fullScale = 1;
-            gridCanvas.setWidth(initX);
-            gridCanvas.setHeight(initY);
-            fullsize = false;
+    /** @return window height needed to show the whole grid */
+    public double getPreferredHeight() {
+        return model.getHeight() * baseCellSize;
+    }
+
+    /**
+     * Resizes the board to fill the screen, or returns it to its normal size.
+     *
+     * @param fullScreen true when the window is going fullscreen
+     */
+    public void setFullScreen(boolean fullScreen) {
+        double scale = 1;
+        if (fullScreen) {
+            double xScale = Screen.getPrimary().getVisualBounds().getWidth() / getPreferredWidth();
+            double yScale = Screen.getPrimary().getVisualBounds().getHeight() / getPreferredHeight();
+            scale = Math.min(xScale, yScale);
         }
-
-        gameOverLabel.setFont(new Font("Arial", 25 * fullScale));
-        gameWonLabel.setFont(new Font("Arial", 25 * fullScale));
+        cellSize = baseCellSize * scale;
+        canvas.setWidth(getPreferredWidth() * scale);
+        canvas.setHeight(getPreferredHeight() * scale);
         gameOverLabel.setStyle(fullScreen ? LARGE_LABEL_STYLE : SMALL_LABEL_STYLE);
         gameWonLabel.setStyle(fullScreen ? LARGE_LABEL_STYLE : SMALL_LABEL_STYLE);
         scoreLabel.setStyle(fullScreen ? LARGE_SCORE_STYLE : SMALL_LABEL_STYLE);
-        drawGrid(coin, snake, obstacle);
+        render();
     }
 
-    public void drawGrid(Coin coin, Snake snake, Obstacle obstacle) {
-        gc.setFill(game.getColor());
-        gc.fillRect(0, 0, gridCanvas.getWidth(), gridCanvas.getHeight());
+    /** Redraws the board and updates the labels from the current model state. */
+    public void render() {
+        gc.setFill(BACKGROUND_COLOR);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawCoin(model.getCoin());
+        drawSnake(model.getSnake().getSegments(), model.getSnake().getDirection());
+        drawObstacles();
 
-        gc.drawImage(coin.getImage(), (coin.getPosition().x * game.getCellSize()) * fullScale, (coin.getPosition().y * game.getCellSize()) * fullScale, game.getCellSize() * fullScale - 3 * fullScale, game.getCellSize() * fullScale - 3 * fullScale);
+        scoreLabel.setText("Score: " + model.getScore());
+        gameOverLabel.setVisible(model.isDead());
+        gameWonLabel.setVisible(model.isWon());
+    }
 
-        int bodyIndex = 0;
-        for (Point point : snake.getBody()) {
-            drawBody(snake, point, bodyIndex);
-            bodyIndex++;
+    private void drawCoin(Coin coin) {
+        Position p = coin.getPosition();
+        double size = cellSize - COIN_MARGIN * (cellSize / baseCellSize);
+        gc.drawImage(sprites.get(coin.getSpriteKey()), p.x() * cellSize, p.y() * cellSize, size, size);
+    }
+
+    private void drawObstacles() {
+        gc.setFill(OBSTACLE_COLOR);
+        for (Position p : model.getObstacles().getPositions()) {
+            gc.fillRect(p.x() * cellSize, p.y() * cellSize, cellSize, cellSize);
         }
-
-        drawHead(snake);
-
-        gc.setFill(obstacle.getColor());
-        for (Point point : obstacle.getObstacles()) {
-            gc.fillRect(point.x * game.getCellSize() * fullScale, point.y * game.getCellSize() * fullScale, game.getCellSize() * fullScale, game.getCellSize() * fullScale);
-        }
     }
 
-
-
-    private void drawHead(Snake snake) {
-        snake.getImageViewHead().setRotate(snake.getDirection().getAngle());
-        SnapshotParameters params = new SnapshotParameters();
-        params.setFill(Color.TRANSPARENT);
-        Image rotatedImage = snake.getImageViewHead().snapshot(params, null);
-        gc.drawImage(rotatedImage, (snake.getHead().x * game.getCellSize()) * fullScale, (snake.getHead().y * game.getCellSize()) * fullScale, game.getCellSize() * fullScale, game.getCellSize() * fullScale);
-    }
-
-    private void drawBody(Snake snake, Point point, int index) {
-        Image rotatedImage;
-        if (snake.getBody().size() <= 1) {
-            snake.getImageViewTail().setRotate(snake.getDirection().getAngle());
-            SnapshotParameters params = new SnapshotParameters();
-            params.setFill(Color.TRANSPARENT);
-            rotatedImage = snake.getImageViewTail().snapshot(params, null);
-        } else if (index == 0) {
-            int rotateTail;
-            if (snake.getBody().get(1).getX() == snake.getBody().get(0).getX() && snake.getBody().get(1).getY() == snake.getBody().get(0).getY() - 1) {
-                rotateTail = 0;
-            } else if (snake.getBody().get(1).getX() == snake.getBody().get(0).getX() && snake.getBody().get(1).getY() == snake.getBody().get(0).getY() + 1) {
-                rotateTail = 180;
-            } else if (snake.getBody().get(1).getX() == snake.getBody().get(0).getX() - 1 && snake.getBody().get(1).getY() == snake.getBody().get(0).getY()) {
-                rotateTail = 270;
+    /**
+     * Draws the snake, choosing a straight, corner or tail sprite for each segment from the
+     * positions of its neighbours.
+     */
+    private void drawSnake(List<Position> segments, Direction heading) {
+        for (int i = 1; i < segments.size(); i++) {
+            Position segment = segments.get(i);
+            Direction towardsHead = directionBetween(segment, segments.get(i - 1));
+            String sprite;
+            double angle;
+            if (i == segments.size() - 1) {
+                sprite = TAIL_SPRITE;
+                angle = towardsHead.getAngle();
             } else {
-                rotateTail = 90;
+                Direction towardsTail = directionBetween(segment, segments.get(i + 1));
+                if (towardsHead.isOpposite(towardsTail)) {
+                    sprite = BODY_SPRITE;
+                    angle = towardsHead.getDx() == 0 ? VERTICAL_ANGLE : HORIZONTAL_ANGLE;
+                } else {
+                    sprite = TURN_SPRITE;
+                    angle = cornerAngle(towardsHead, towardsTail);
+                }
             }
-            snake.getImageViewTail().setRotate(rotateTail);
-            SnapshotParameters params = new SnapshotParameters();
-            params.setFill(Color.TRANSPARENT);
-            rotatedImage = snake.getImageViewTail().snapshot(params, null);
-        } else if (index > 0 && (turnArray[(int) snake.getBody().get(index).getX()][(int) snake.getBody().get(index).getY()] != 0)) {
-            snake.getImageViewTurn().setRotate(90 * turnArray[(int) snake.getBody().get(index).getX()][(int) snake.getBody().get(index).getY()]);
-            SnapshotParameters params = new SnapshotParameters();
-            params.setFill(Color.TRANSPARENT);
-            rotatedImage = snake.getImageViewTurn().snapshot(params, null);
-        } else {
-            snake.getImageViewBody().setRotate(snake.getBodyDir(index));
-            SnapshotParameters params = new SnapshotParameters();
-            params.setFill(Color.TRANSPARENT);
-            rotatedImage = snake.getImageViewBody().snapshot(params, null);
+            drawRotated(sprites.get(sprite), segment, angle);
         }
+        drawRotated(sprites.get(HEAD_SPRITE), segments.get(0), heading.getAngle());
+    }
 
-        if (turnArray[(int) snake.getBody().get(0).getX()][(int) snake.getBody().get(0).getY()] != 0) {
-            turnArray[(int) snake.getBody().get(0).getX()][(int) snake.getBody().get(0).getY()] = 0;
+    /**
+     * The corner sprite, unrotated, joins the bottom and left edges of a cell. Each
+     * quarter turn clockwise moves the joined edges round by one side.
+     */
+    private double cornerAngle(Direction a, Direction b) {
+        if (isPair(a, b, Direction.DOWN, Direction.LEFT)) {
+            return 0;
+        } else if (isPair(a, b, Direction.LEFT, Direction.UP)) {
+            return 90;
+        } else if (isPair(a, b, Direction.UP, Direction.RIGHT)) {
+            return 180;
         }
-
-        gc.drawImage(rotatedImage, (point.x * game.getCellSize()) * fullScale, (point.y * game.getCellSize()) * fullScale, game.getCellSize() * fullScale, game.getCellSize() * fullScale);
+        return 270;
     }
 
-    public void turnDir(Snake snake, Direction last, Direction current) {
-        int turn;
-        if ((last == Direction.LEFT && current == Direction.UP) || (last == Direction.DOWN && current == Direction.RIGHT)) {
-            turn = 2;
-        } else if ((last == Direction.LEFT && current == Direction.DOWN) || (last == Direction.UP && current == Direction.RIGHT)) {
-            turn = 3;
-        } else if ((last == Direction.RIGHT && current == Direction.UP) || (last == Direction.DOWN && current == Direction.LEFT)) {
-            turn = 1;
-        } else if ((last == Direction.UP && current == Direction.LEFT) || (last == Direction.RIGHT && current == Direction.DOWN)) {
-            turn = 4;
-        } else {
-            turn = 0;
+    private boolean isPair(Direction a, Direction b, Direction first, Direction second) {
+        return (a == first && b == second) || (a == second && b == first);
+    }
+
+    /**
+     * Direction from one segment to an adjacent one. Neighbours more than one cell apart
+     * are touching through a wrapped border, so the step is reversed.
+     */
+    private Direction directionBetween(Position from, Position to) {
+        int dx = Integer.signum(to.x() - from.x());
+        int dy = Integer.signum(to.y() - from.y());
+        if (Math.abs(to.x() - from.x()) > 1) {
+            dx = -dx;
         }
-        turnArray[(int) snake.getHead().getX()][(int) snake.getHead().getY()] = turn;
-    }
-
-    public void gameOver(Snake snake) {
-        if (snake.isDead() && !gameOverVis) {
-            gameOverVis = true;
-            gameOverLabel.setVisible(true);
-        } else if (!snake.isDead() && gameOverVis) {
-            gameOverLabel.setVisible(false);
-            gameOverVis = false;
+        if (Math.abs(to.y() - from.y()) > 1) {
+            dy = -dy;
         }
-    }
-
-    public void gameWon() {
-        if (game.gameWon() && !gameWonVis) {
-            gameWonVis = true;
-            gameWonLabel.setVisible(true);
-        } else if (!game.gameWon() && gameWonVis) {
-            gameWonVis = false;
-            gameWonLabel.setVisible(false);
+        for (Direction d : Direction.values()) {
+            if (d.getDx() == dx && d.getDy() == dy) {
+                return d;
+            }
         }
+        return Direction.UP;
     }
 
-    public void updateScoreLabel() {
-        scoreLabel.setText("Score: " + game.getScore());
+    /** Draws an image rotated about the centre of a cell by transforming the canvas. */
+    private void drawRotated(Image image, Position cell, double angle) {
+        double half = cellSize / 2;
+        gc.save();
+        gc.translate(cell.x() * cellSize + half, cell.y() * cellSize + half);
+        gc.rotate(angle);
+        gc.drawImage(image, -half, -half, cellSize, cellSize);
+        gc.restore();
     }
-
-    public Canvas getCanvas() {
-        return gridCanvas;
-    }
-
-    public GraphicsContext getGraphicsContext() {
-        return gc;
-    }
-
-    public Label getGameOverLabel() {
-        return gameOverLabel;
-    }
-
-    public Label getGameWonLabel() {
-        return gameWonLabel;
-    }
-
-    public Label getScoreLabel() {
-        return scoreLabel;
-    }
-
 }
