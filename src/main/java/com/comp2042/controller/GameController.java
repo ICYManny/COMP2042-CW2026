@@ -2,14 +2,7 @@ package com.comp2042.controller;
 
 import com.comp2042.app.Main;
 import com.comp2042.model.Direction;
-import com.comp2042.model.Game;
-import com.comp2042.model.Obstacle;
-import com.comp2042.model.Snake;
-import com.comp2042.model.coin.BlueCoin;
-import com.comp2042.model.coin.Coin;
-import com.comp2042.model.coin.GoldCoin;
-import com.comp2042.model.coin.RainbowCoin;
-import com.comp2042.model.coin.SilverCoin;
+import com.comp2042.model.GameModel;
 import com.comp2042.view.GameView;
 
 import javafx.animation.Animation;
@@ -17,102 +10,68 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-
-import java.util.Random;
-
+/**
+ * Connects keyboard input and the game clock to the model and view.
+ * <p>
+ * The controller holds no game rules: it turns key presses into model calls, asks the
+ * model to advance on every tick of the timeline, and tells the view to redraw.
+ */
 public class GameController {
-    private Snake snake;
-    private Coin coin;
-    private GameView gameView;
-    private Game game;
-    private Stage stage;
 
-    private Obstacle obstacle;
+    private final GameModel model;
+    private final GameView view;
+    private final Stage stage;
+    private final Timeline timeline;
 
-    private Direction direction = Direction.LEFT;
-    private Direction lastDirection = Direction.LEFT;
-    private boolean keyPressed = false;
-
-
-
-    public GameController(Snake snake, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
-        this.snake = snake;
-        this.coin = coin;
-        this.gameView = gameView;
-        this.game = game;
+    /**
+     * @param model the game being played
+     * @param view  the view drawing that game
+     * @param stage the window showing the game, used for fullscreen
+     */
+    public GameController(GameModel model, GameView view, Stage stage) {
+        this.model = model;
+        this.view = view;
         this.stage = stage;
-
-        this.obstacle = obstacle;
-        animation.setCycleCount(Animation.INDEFINITE);
-        animation.setRate(game.getSpeed());
+        timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> step()));
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.setRate(model.getSpeed());
     }
 
-    private final Timeline animation = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-        if (snake.isDead()) {
-            return;
-        } else {
-
-            snake.move(direction);
-
-            if (!snake.isDead() && snake.ateCoin(coin)) {
-                applyCoinEffect();
-                game.incrementCoinsEaten();
-                if (game.gameWon()) {
-                    gameView.drawGrid(coin, snake, obstacle);
-                    return;
-                }
-                newCoin();
-            }
-
-            keyPressed = false;
-
-            if (!snake.isDead() || snake.hitSelf()) {
-                gameView.drawGrid(coin, snake, obstacle);
-            }
-
-            gameView.gameWon();
-            gameView.gameOver(snake);
-            gameView.updateScoreLabel();
+    private void step() {
+        model.tick();
+        timeline.setRate(model.getSpeed());
+        view.render();
+        if (model.isOver()) {
+            timeline.stop();
         }
-    }));
+    }
 
+    /**
+     * Handles a key press in the game window.
+     *
+     * @param event the key event
+     */
     public void handle(KeyEvent event) {
-        if (event.getCode().isArrowKey()) animation.play();
-
-        Direction requested = directionFor(event.getCode());
-        if (requested != null && isValidTurn(requested) && !keyPressed) {
-            lastDirection = direction;
-            direction = requested;
-            keyPressed = true;
-        }
-
-        if (event.getCode().equals(KeyCode.P)) {
-            animation.stop();
-        }
-
-        if (event.getCode().equals(KeyCode.TAB)) {
+        KeyCode code = event.getCode();
+        Direction direction = directionFor(code);
+        if (direction != null) {
+            model.turn(direction);
+            if (!model.isOver()) {
+                timeline.play();
+            }
+        } else if (code == KeyCode.P) {
+            timeline.stop();
+        } else if (code == KeyCode.TAB) {
             reset();
-            gameView.updateScoreLabel();
-        }
-
-        if (event.getCode() == KeyCode.PLUS || event.getCode() == KeyCode.EQUALS || event.getCode() == KeyCode.ADD) {
-            gameView.scaleToFullscreen(true, stage, obstacle, snake, coin);
-        }
-
-        if (event.getCode() == KeyCode.MINUS || event.getCode() == KeyCode.SUBTRACT) {
-            gameView.scaleToFullscreen(false, stage, obstacle, snake, coin);
-        }
-
-        if (event.getCode().equals(KeyCode.ESCAPE)) {
-            animation.stop();
-            direction = Direction.LEFT;
-            lastDirection = Direction.LEFT;
-            Main.getViewManager().getPrimaryStage().show();
-            Main.getViewManager().getGameStage().close();
+        } else if (code == KeyCode.PLUS || code == KeyCode.EQUALS || code == KeyCode.ADD) {
+            setFullScreen(true);
+        } else if (code == KeyCode.MINUS || code == KeyCode.SUBTRACT) {
+            setFullScreen(false);
+        } else if (code == KeyCode.ESCAPE) {
+            returnToMenu();
         }
     }
 
@@ -126,66 +85,21 @@ public class GameController {
         };
     }
 
-    private boolean isValidTurn(Direction requested) {
-        return !requested.isOpposite(direction);
-    }
-
     private void reset() {
-
-        animation.jumpTo(Duration.ZERO);
-        animation.stop();
-
-        snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
-        coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
-
-
-        animation.setRate(game.getSpeed());
-        direction = Direction.LEFT;
-        lastDirection = Direction.LEFT;
-        keyPressed = false;
-        game.resetScore();
-        obstacle.reset();
-
-        gameView.gameWon();
-        gameView.gameOver(snake);
-        gameView.updateScoreLabel();
-
-        gameView.drawGrid(coin, snake, obstacle);
+        timeline.stop();
+        model.reset();
+        timeline.setRate(model.getSpeed());
+        view.render();
     }
 
-    private void applyCoinEffect() {
-        animation.setRate(game.getSpeed());
-        snake.setIgnoreBorders(false);
-        if (coin.getClass().equals(RainbowCoin.class)) {
-            RainbowCoin tempCoin = (RainbowCoin) coin;
-            animation.setRate(game.getSpeed() + tempCoin.getSpeedBonus());
-        } else if (coin.getClass().equals(SilverCoin.class)){
-            Random rnd = new Random();
-            obstacle.newObstacles(snake, coin, rnd.nextInt(game.getWidth() * game.getHeight()/ 20) +3);
-            game.reduceMaxCoins(obstacle.getObstacles().size());
-        } else if (coin.getClass().equals(BlueCoin.class)) {
-            snake.setIgnoreBorders(true);
-        }
-        game.addPoints(coin.getPoints());
+    private void setFullScreen(boolean fullScreen) {
+        stage.setFullScreen(fullScreen);
+        view.setFullScreen(fullScreen);
     }
 
-    private void newCoin() {
-        if (game.isPowerUp()) {
-            Random rnd = new Random();
-            int ran = rnd.nextInt(12);
-            if (ran == 1) {
-                coin = new GoldCoin(game.getWidth(), game.getHeight(), snake, obstacle);
-            } else if (ran == 2) {
-                coin = new RainbowCoin(game.getWidth(), game.getHeight(), snake, obstacle);
-            } else if (ran == 3) {
-                coin = new BlueCoin(game.getWidth(), game.getHeight(), snake, obstacle);
-            } else if (ran == 4 && obstacle.getObstacles().size() == 0) {
-                coin = new SilverCoin(game.getWidth(), game.getHeight(), snake, obstacle);
-            } else {
-                coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
-            }
-        } else {
-            coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
-        }
+    private void returnToMenu() {
+        timeline.stop();
+        Main.getViewManager().getPrimaryStage().show();
+        Main.getViewManager().getGameStage().close();
     }
 }

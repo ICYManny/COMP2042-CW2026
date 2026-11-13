@@ -1,8 +1,6 @@
 package com.comp2042.app;
 
 import com.comp2042.util.ResourceLoader;
-import com.comp2042.model.Game;
-import com.comp2042.model.Snake;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
