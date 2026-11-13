@@ -2,6 +2,7 @@ package com.comp2042.controller;
 
 import com.comp2042.app.Main;
 import com.comp2042.model.Direction;
+import com.comp2042.model.GameListener;
 import com.comp2042.model.GameModel;
 import com.comp2042.view.GameView;
 
@@ -38,15 +39,18 @@ public class GameController {
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> step()));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.setRate(model.getSpeed());
+        model.addListener(new GameListener() {
+            @Override
+            public void onGameOver(boolean won) {
+                timeline.stop();
+            }
+        });
     }
 
     private void step() {
         model.tick();
         timeline.setRate(model.getSpeed());
         view.render();
-        if (model.isOver()) {
-            timeline.stop();
-        }
     }
 
     /**

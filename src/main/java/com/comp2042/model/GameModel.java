@@ -6,6 +6,8 @@ import com.comp2042.model.coin.GoldCoin;
 import com.comp2042.model.coin.RainbowCoin;
 import com.comp2042.model.coin.SilverCoin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -28,6 +30,7 @@ public class GameModel {
     private final GameSettings settings;
     private final Random random;
     private final Obstacles obstacles;
+    private final List<GameListener> listeners = new ArrayList<>();
     private Snake snake;
     private Coin coin;
     private int score;
@@ -58,6 +61,15 @@ public class GameModel {
         this.random = random;
         this.obstacles = new Obstacles(settings.width(), settings.height());
         reset();
+    }
+
+    /**
+     * Registers a listener to be told about coins eaten and the game ending.
+     *
+     * @param listener the listener to add
+     */
+    public void addListener(GameListener listener) {
+        listeners.add(listener);
     }
 
     /** Puts the game back to its starting state. */
@@ -94,14 +106,14 @@ public class GameModel {
         Position next = snake.nextHead();
         if (!next.isInside(settings.width(), settings.height())) {
             if (!wrapsAtBorders()) {
-                dead = true;
+                die();
                 return;
             }
             next = next.wrap(settings.width(), settings.height());
         }
         boolean eating = next.equals(coin.getPosition());
         if (obstacles.contains(next) || snake.collidesWithBody(next, eating)) {
-            dead = true;
+            die();
             return;
         }
         snake.moveTo(next, eating);
@@ -110,7 +122,13 @@ public class GameModel {
         }
     }
 
+    private void die() {
+        dead = true;
+        listeners.forEach(listener -> listener.onGameOver(false));
+    }
+
     private void eatCoin() {
+        Coin eaten = coin;
         speed = settings.difficulty().getSpeed();
         ignoreBorders = false;
         if (coin instanceof RainbowCoin rainbow) {
@@ -124,7 +142,10 @@ public class GameModel {
         }
         score += coin.getPoints();
         coinsEaten++;
-        if (!isWon()) {
+        listeners.forEach(listener -> listener.onCoinEaten(eaten));
+        if (isWon()) {
+            listeners.forEach(listener -> listener.onGameOver(true));
+        } else {
             coin = nextCoin();
         }
     }
