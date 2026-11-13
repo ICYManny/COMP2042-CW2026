@@ -1,13 +1,10 @@
 package com.comp2042.model.coin;
 
-import com.comp2042.util.ResourceLoader;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 
-import javafx.scene.image.Image;
 
 public class RainbowCoin extends Coin {
-    private Image image = new Image(ResourceLoader.externalForm("/views/res/rainbowcoin.png"));
 
     public RainbowCoin(int x, int y, Snake snake, Obstacle obstacle) {
         super(x, y, snake, obstacle);
@@ -23,7 +20,7 @@ public class RainbowCoin extends Coin {
         return speedBonus;
     }
 
-    public Image getImage() {
-        return image;
+    public String getSpriteKey() {
+        return "rainbowcoin";
     }
 }

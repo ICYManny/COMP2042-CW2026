@@ -88,7 +88,6 @@ public class GameController {
             lastDirection = direction;
             direction = requested;
             keyPressed = true;
-            gameView.turnDir(snake, lastDirection, direction);
         }
 
         if (event.getCode().equals(KeyCode.P)) {
