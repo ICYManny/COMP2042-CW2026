@@ -1,6 +1,5 @@
 package com.comp2042.controller;
 
-import com.comp2042.app.Main;
 import com.comp2042.model.Direction;
 import com.comp2042.model.GameListener;
 import com.comp2042.model.GameModel;
@@ -26,16 +25,19 @@ public class GameController {
     private final GameView view;
     private final Stage stage;
     private final Timeline timeline;
+    private final Runnable exitToMenu;
 
     /**
-     * @param model the game being played
-     * @param view  the view drawing that game
-     * @param stage the window showing the game, used for fullscreen
+     * @param model      the game being played
+     * @param view       the view drawing that game
+     * @param stage      the window showing the game, used for fullscreen
+     * @param exitToMenu action that shows the main menu
      */
-    public GameController(GameModel model, GameView view, Stage stage) {
+    public GameController(GameModel model, GameView view, Stage stage, Runnable exitToMenu) {
         this.model = model;
         this.view = view;
         this.stage = stage;
+        this.exitToMenu = exitToMenu;
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> step()));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.setRate(model.getSpeed());
@@ -103,7 +105,6 @@ public class GameController {
 
     private void returnToMenu() {
         timeline.stop();
-        Main.getViewManager().getPrimaryStage().show();
-        Main.getViewManager().getGameStage().close();
+        exitToMenu.run();
     }
 }
