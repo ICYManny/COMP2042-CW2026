@@ -1,11 +1,8 @@
 package com.comp2042.model;
 
 import com.comp2042.model.coin.BasicCoin;
-import com.comp2042.model.coin.BlueCoin;
 import com.comp2042.model.coin.Coin;
-import com.comp2042.model.coin.GoldCoin;
-import com.comp2042.model.coin.RainbowCoin;
-import com.comp2042.model.coin.SilverCoin;
+import com.comp2042.model.coin.CoinFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +23,6 @@ public class GameModel {
     private static final int STARTING_LENGTH = 2;
     /** New obstacles never appear closer than this many steps to the head. */
     private static final int SAFE_DISTANCE = 3;
-    private static final int SPECIAL_COIN_ODDS = 12;
     private static final int OBSTACLE_DENSITY = 20;
     private static final int MIN_NEW_OBSTACLES = 3;
 
@@ -34,6 +30,7 @@ public class GameModel {
     private final Random random;
     private final Obstacles obstacles = new Obstacles();
     private final FreeCellFinder freeCells;
+    private final CoinFactory coinFactory;
     private final List<GameListener> listeners = new ArrayList<>();
     private Snake snake;
     private Coin coin;
@@ -64,6 +61,7 @@ public class GameModel {
         this.settings = settings;
         this.random = random;
         this.freeCells = new FreeCellFinder(settings.width(), settings.height(), random);
+        this.coinFactory = new CoinFactory(random, settings.powerUpsEnabled());
         reset();
     }
 
@@ -145,7 +143,7 @@ public class GameModel {
             won = true;
             listeners.forEach(listener -> listener.onGameOver(true));
         } else {
-            coin = nextCoin(cell.get());
+            coin = coinFactory.create(cell.get(), obstacles.count() > 0);
         }
     }
 
@@ -155,23 +153,6 @@ public class GameModel {
      */
     private boolean isOccupied(Position cell) {
         return snake.occupies(cell) || obstacles.contains(cell);
-    }
-
-    private Coin nextCoin(Position cell) {
-        if (!settings.powerUpsEnabled()) {
-            return new BasicCoin(cell);
-        }
-        int roll = random.nextInt(SPECIAL_COIN_ODDS);
-        if (roll == 1) {
-            return new GoldCoin(cell);
-        } else if (roll == 2) {
-            return new RainbowCoin(cell);
-        } else if (roll == 3) {
-            return new BlueCoin(cell);
-        } else if (roll == 4 && obstacles.count() == 0) {
-            return new SilverCoin(cell);
-        }
-        return new BasicCoin(cell);
     }
 
     /**
