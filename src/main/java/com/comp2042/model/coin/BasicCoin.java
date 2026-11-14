@@ -1,7 +1,6 @@
 package com.comp2042.model.coin;
 
-import com.comp2042.model.Obstacles;
-import com.comp2042.model.Snake;
+import com.comp2042.model.Position;
 
 /**
  * The ordinary red coin: worth 5 points, no special effect.
@@ -11,8 +10,8 @@ public class BasicCoin extends Coin {
 
     private static final int POINTS = 5;
 
-    public BasicCoin(int width, int height, Snake snake, Obstacles obstacles) {
-        super(width, height, snake, obstacles);
+    public BasicCoin(Position position) {
+        super(position);
     }
 
     @Override

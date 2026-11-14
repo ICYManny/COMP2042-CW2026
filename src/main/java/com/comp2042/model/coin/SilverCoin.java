@@ -1,8 +1,7 @@
 package com.comp2042.model.coin;
 
 import com.comp2042.model.GameModel;
-import com.comp2042.model.Obstacles;
-import com.comp2042.model.Snake;
+import com.comp2042.model.Position;
 
 /**
  * Scatters new obstacles over the board.
@@ -11,8 +10,8 @@ public class SilverCoin extends Coin {
 
     private static final int POINTS = 5;
 
-    public SilverCoin(int width, int height, Snake snake, Obstacles obstacles) {
-        super(width, height, snake, obstacles);
+    public SilverCoin(Position position) {
+        super(position);
     }
 
     @Override

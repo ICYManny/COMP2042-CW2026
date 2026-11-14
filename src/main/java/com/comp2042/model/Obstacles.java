@@ -1,11 +1,10 @@
 package com.comp2042.model;
 
-import com.comp2042.model.coin.Coin;
-
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.Random;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * The blocks on the board that kill the snake on contact.
@@ -15,42 +14,31 @@ import java.util.Set;
  */
 public class Obstacles {
 
-    private static final int MAX_OBSTACLES = 50;
-    private static final int SAFE_DISTANCE = 3;
+    /** Upper limit so random obstacles can never fill the board. */
+    public static final int MAX_OBSTACLES = 50;
 
     private final Set<Position> positions = new LinkedHashSet<>();
-    private final int width;
-    private final int height;
 
     /**
-     * @param width  grid width in cells
-     * @param height grid height in cells
-     */
-    public Obstacles(int width, int height) {
-        this.width = width;
-        this.height = height;
-    }
-
-    /**
-     * Adds random obstacles on free cells, keeping a safe zone around the snake's head.
+     * Adds obstacles on random free cells, stopping early if the limit is reached or no
+     * free cell is left.
      *
-     * @param amount number of obstacles to add
-     * @param snake  the snake, whose cells are avoided
-     * @param coin   the current coin, whose cell is avoided
+     * @param amount     number of obstacles to add
+     * @param freeCells  used to pick random cells
+     * @param forbidden  cells where an obstacle may not go (snake, coin, safe zone)
+     * @return number of obstacles actually added
      */
-    public void spawn(int amount, Snake snake, Coin coin) {
-        if (positions.size() > MAX_OBSTACLES) {
-            return;
+    public int spawn(int amount, FreeCellFinder freeCells, Predicate<Position> forbidden) {
+        int added = 0;
+        while (added < amount && positions.size() < MAX_OBSTACLES) {
+            Optional<Position> cell = freeCells.find(forbidden.or(positions::contains));
+            if (cell.isEmpty()) {
+                break;
+            }
+            positions.add(cell.get());
+            added++;
         }
-        Random rnd = new Random();
-        for (int i = 0; i < amount; i++) {
-            Position p;
-            do {
-                p = new Position(rnd.nextInt(width), rnd.nextInt(height));
-            } while (coin.getPosition().equals(p) || snake.occupies(p) || positions.contains(p)
-                    || snake.getHead().distanceTo(p) < SAFE_DISTANCE);
-            positions.add(p);
-        }
+        return added;
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.comp2042.model.coin;
 
-import com.comp2042.model.Obstacles;
-import com.comp2042.model.Snake;
+import com.comp2042.model.Position;
 
 /**
  * Worth 15 points, three times a basic coin.
@@ -10,8 +9,8 @@ public class GoldCoin extends Coin {
 
     private static final int POINTS = 15;
 
-    public GoldCoin(int width, int height, Snake snake, Obstacles obstacles) {
-        super(width, height, snake, obstacles);
+    public GoldCoin(Position position) {
+        super(position);
     }
 
     @Override

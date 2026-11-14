@@ -1,11 +1,7 @@
 package com.comp2042.model.coin;
 
 import com.comp2042.model.GameModel;
-import com.comp2042.model.Obstacles;
 import com.comp2042.model.Position;
-import com.comp2042.model.Snake;
-
-import java.util.Random;
 
 /**
  * Something the snake can eat. Every coin is worth points and may also change the game
@@ -19,13 +15,11 @@ import java.util.Random;
 public abstract class Coin {
     private final Position position;
 
-    protected Coin(int width, int height, Snake snake, Obstacles obstacles) {
-        Random rnd = new Random();
-        Position candidate;
-        do {
-            candidate = new Position(rnd.nextInt(width), rnd.nextInt(height));
-        } while (snake.occupies(candidate) || obstacles.contains(candidate));
-        position = candidate;
+    /**
+     * @param position the cell the coin is placed on
+     */
+    protected Coin(Position position) {
+        this.position = position;
     }
 
     /** @return the cell this coin occupies */

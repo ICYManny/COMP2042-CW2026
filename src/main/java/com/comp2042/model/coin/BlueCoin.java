@@ -1,8 +1,7 @@
 package com.comp2042.model.coin;
 
 import com.comp2042.model.GameModel;
-import com.comp2042.model.Obstacles;
-import com.comp2042.model.Snake;
+import com.comp2042.model.Position;
 
 /**
  * Lets the snake pass through the outer walls until the next coin is eaten.
@@ -11,8 +10,8 @@ public class BlueCoin extends Coin {
 
     private static final int POINTS = 5;
 
-    public BlueCoin(int width, int height, Snake snake, Obstacles obstacles) {
-        super(width, height, snake, obstacles);
+    public BlueCoin(Position position) {
+        super(position);
     }
 
     @Override

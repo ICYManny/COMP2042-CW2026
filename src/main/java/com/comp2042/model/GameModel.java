@@ -9,6 +9,7 @@ import com.comp2042.model.coin.SilverCoin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -22,24 +23,26 @@ import java.util.Random;
  */
 public class GameModel {
 
-    /** The snake starts with two segments, so two cells can never hold a coin. */
     private static final int STARTING_LENGTH = 2;
+    /** New obstacles never appear closer than this many steps to the head. */
+    private static final int SAFE_DISTANCE = 3;
     private static final int SPECIAL_COIN_ODDS = 12;
     private static final int OBSTACLE_DENSITY = 20;
     private static final int MIN_NEW_OBSTACLES = 3;
 
     private final GameSettings settings;
     private final Random random;
-    private final Obstacles obstacles;
+    private final Obstacles obstacles = new Obstacles();
+    private final FreeCellFinder freeCells;
     private final List<GameListener> listeners = new ArrayList<>();
     private Snake snake;
     private Coin coin;
     private int score;
     private int coinsEaten;
-    private int maxCoins;
     private double speed;
     private boolean ignoreBorders;
     private boolean dead;
+    private boolean won;
 
     /**
      * Creates a new game, ready to play.
@@ -60,7 +63,7 @@ public class GameModel {
     public GameModel(GameSettings settings, Random random) {
         this.settings = settings;
         this.random = random;
-        this.obstacles = new Obstacles(settings.width(), settings.height());
+        this.freeCells = new FreeCellFinder(settings.width(), settings.height(), random);
         reset();
     }
 
@@ -77,10 +80,10 @@ public class GameModel {
     public void reset() {
         obstacles.clear();
         snake = new Snake(new Position(settings.width() / 2, settings.height() / 2), Direction.LEFT, STARTING_LENGTH);
-        coin = new BasicCoin(settings.width(), settings.height(), snake, obstacles);
         score = 0;
         coinsEaten = 0;
-        maxCoins = settings.width() * settings.height() - STARTING_LENGTH;
+        won = false;
+        coin = new BasicCoin(freeCells.find(this::isOccupied).orElseThrow());
         speed = settings.difficulty().getSpeed();
         ignoreBorders = false;
         dead = false;
@@ -112,7 +115,7 @@ public class GameModel {
             }
             next = next.wrap(settings.width(), settings.height());
         }
-        boolean eating = next.equals(coin.getPosition());
+        boolean eating = coin != null && next.equals(coin.getPosition());
         if (obstacles.contains(next) || snake.collidesWithBody(next, eating)) {
             die();
             return;
@@ -136,30 +139,39 @@ public class GameModel {
         score += coin.getPoints();
         coinsEaten++;
         listeners.forEach(listener -> listener.onCoinEaten(eaten));
-        if (isWon()) {
+        Optional<Position> cell = freeCells.find(this::isOccupied);
+        if (cell.isEmpty()) {
+            coin = null;
+            won = true;
             listeners.forEach(listener -> listener.onGameOver(true));
         } else {
-            coin = nextCoin();
+            coin = nextCoin(cell.get());
         }
     }
 
-    private Coin nextCoin() {
-        int w = settings.width();
-        int h = settings.height();
+    /**
+     * @param cell a grid cell
+     * @return true if the snake or an obstacle is on that cell
+     */
+    private boolean isOccupied(Position cell) {
+        return snake.occupies(cell) || obstacles.contains(cell);
+    }
+
+    private Coin nextCoin(Position cell) {
         if (!settings.powerUpsEnabled()) {
-            return new BasicCoin(w, h, snake, obstacles);
+            return new BasicCoin(cell);
         }
         int roll = random.nextInt(SPECIAL_COIN_ODDS);
         if (roll == 1) {
-            return new GoldCoin(w, h, snake, obstacles);
+            return new GoldCoin(cell);
         } else if (roll == 2) {
-            return new RainbowCoin(w, h, snake, obstacles);
+            return new RainbowCoin(cell);
         } else if (roll == 3) {
-            return new BlueCoin(w, h, snake, obstacles);
+            return new BlueCoin(cell);
         } else if (roll == 4 && obstacles.count() == 0) {
-            return new SilverCoin(w, h, snake, obstacles);
+            return new SilverCoin(cell);
         }
-        return new BasicCoin(w, h, snake, obstacles);
+        return new BasicCoin(cell);
     }
 
     /**
@@ -183,9 +195,11 @@ public class GameModel {
 
     /** Adds a random batch of obstacles to the board. Used by coin effects. */
     public void spawnObstacles() {
-        obstacles.spawn(random.nextInt(settings.width() * settings.height() / OBSTACLE_DENSITY) + MIN_NEW_OBSTACLES,
-                snake, coin);
-        maxCoins -= obstacles.count() - 1;
+        int amount = random.nextInt(settings.width() * settings.height() / OBSTACLE_DENSITY) + MIN_NEW_OBSTACLES;
+        Position head = snake.getHead();
+        obstacles.spawn(amount, freeCells, cell -> isOccupied(cell)
+                || (coin != null && cell.equals(coin.getPosition()))
+                || head.distanceTo(cell) < SAFE_DISTANCE);
     }
 
     private boolean wrapsAtBorders() {
@@ -202,9 +216,14 @@ public class GameModel {
         return dead;
     }
 
-    /** @return true if every free cell has been filled */
+    /** @return true if the snake has filled every free cell */
     public boolean isWon() {
-        return coinsEaten >= maxCoins;
+        return won;
+    }
+
+    /** @return number of coins eaten so far */
+    public int getCoinsEaten() {
+        return coinsEaten;
     }
 
     /** @return the snake */
@@ -212,7 +231,7 @@ public class GameModel {
         return snake;
     }
 
-    /** @return the coin currently on the board */
+    /** @return the coin currently on the board, or null once the game is won */
     public Coin getCoin() {
         return coin;
     }
