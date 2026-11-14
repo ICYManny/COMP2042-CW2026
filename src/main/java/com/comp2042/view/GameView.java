@@ -128,6 +128,9 @@ public class GameView {
     }
 
     private void drawCoin(Coin coin) {
+        if (coin == null) {
+            return;
+        }
         Position p = coin.getPosition();
         double size = cellSize - COIN_MARGIN * (cellSize / baseCellSize);
         gc.drawImage(sprites.get(coin.getSpriteKey()), p.x() * cellSize, p.y() * cellSize, size, size);
