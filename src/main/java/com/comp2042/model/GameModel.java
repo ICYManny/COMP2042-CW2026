@@ -1,5 +1,6 @@
 package com.comp2042.model;
 
+import com.comp2042.model.coin.BasicCoin;
 import com.comp2042.model.coin.BlueCoin;
 import com.comp2042.model.coin.Coin;
 import com.comp2042.model.coin.GoldCoin;
@@ -76,7 +77,7 @@ public class GameModel {
     public void reset() {
         obstacles.clear();
         snake = new Snake(new Position(settings.width() / 2, settings.height() / 2), Direction.LEFT, STARTING_LENGTH);
-        coin = new Coin(settings.width(), settings.height(), snake, obstacles);
+        coin = new BasicCoin(settings.width(), settings.height(), snake, obstacles);
         score = 0;
         coinsEaten = 0;
         maxCoins = settings.width() * settings.height() - STARTING_LENGTH;
@@ -131,15 +132,7 @@ public class GameModel {
         Coin eaten = coin;
         speed = settings.difficulty().getSpeed();
         ignoreBorders = false;
-        if (coin instanceof RainbowCoin rainbow) {
-            speed += rainbow.getSpeedBonus();
-        } else if (coin instanceof SilverCoin) {
-            obstacles.spawn(random.nextInt(settings.width() * settings.height() / OBSTACLE_DENSITY) + MIN_NEW_OBSTACLES,
-                    snake, coin);
-            maxCoins -= obstacles.count() - 1;
-        } else if (coin instanceof BlueCoin) {
-            ignoreBorders = true;
-        }
+        coin.applyEffect(this);
         score += coin.getPoints();
         coinsEaten++;
         listeners.forEach(listener -> listener.onCoinEaten(eaten));
@@ -154,7 +147,7 @@ public class GameModel {
         int w = settings.width();
         int h = settings.height();
         if (!settings.powerUpsEnabled()) {
-            return new Coin(w, h, snake, obstacles);
+            return new BasicCoin(w, h, snake, obstacles);
         }
         int roll = random.nextInt(SPECIAL_COIN_ODDS);
         if (roll == 1) {
@@ -166,7 +159,33 @@ public class GameModel {
         } else if (roll == 4 && obstacles.count() == 0) {
             return new SilverCoin(w, h, snake, obstacles);
         }
-        return new Coin(w, h, snake, obstacles);
+        return new BasicCoin(w, h, snake, obstacles);
+    }
+
+    /**
+     * Makes the snake faster until the next coin is eaten. Used by coin effects.
+     *
+     * @param bonus extra moves per second
+     */
+    public void boostSpeed(double bonus) {
+        speed += bonus;
+    }
+
+    /**
+     * Lets the snake wrap through the outer walls until the next coin is eaten.
+     * Used by coin effects.
+     *
+     * @param ignore true to let the snake pass through walls
+     */
+    public void setIgnoreBorders(boolean ignore) {
+        ignoreBorders = ignore;
+    }
+
+    /** Adds a random batch of obstacles to the board. Used by coin effects. */
+    public void spawnObstacles() {
+        obstacles.spawn(random.nextInt(settings.width() * settings.height() / OBSTACLE_DENSITY) + MIN_NEW_OBSTACLES,
+                snake, coin);
+        maxCoins -= obstacles.count() - 1;
     }
 
     private boolean wrapsAtBorders() {
