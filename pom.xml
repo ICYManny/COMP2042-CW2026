@@ -15,6 +15,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>25.0.1</javafx.version>
+        <junit.version>5.11.4</junit.version>
         <!-- JavaFX application class, used by "mvnw javafx:run" -->
         <mainClass>com.comp2042.app.Main</mainClass>
         <!-- Plain launcher used by the runnable jar (see Launcher.java) -->
@@ -47,6 +48,13 @@
             <artifactId>javafx-base</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <!-- Unit testing (run with: mvnw test) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -59,6 +67,13 @@
                 <configuration>
                     <release>${maven.compiler.release}</release>
                 </configuration>
+            </plugin>
+
+            <!-- Runs the JUnit 5 tests during "mvnw test" and "mvnw package" -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
             </plugin>
 
             <!-- Lets you run the app with: mvn javafx:run -->
