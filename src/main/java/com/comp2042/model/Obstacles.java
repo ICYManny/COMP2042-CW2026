@@ -42,6 +42,15 @@ public class Obstacles {
     }
 
     /**
+     * Places an obstacle on a specific cell.
+     *
+     * @param cell where to put the obstacle
+     */
+    public void add(Position cell) {
+        positions.add(cell);
+    }
+
+    /**
      * @param cell a grid cell
      * @return true if an obstacle is on that cell
      */
