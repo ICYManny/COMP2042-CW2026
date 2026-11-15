@@ -156,6 +156,16 @@ public class GameModel {
     }
 
     /**
+     * Replaces the coin on the board. Package-private so unit tests can put a coin exactly
+     * where they need it instead of relying on random placement.
+     *
+     * @param newCoin the coin to place
+     */
+    void placeCoin(Coin newCoin) {
+        coin = newCoin;
+    }
+
+    /**
      * Makes the snake faster until the next coin is eaten. Used by coin effects.
      *
      * @param bonus extra moves per second
