@@ -26,6 +26,7 @@ public class GameController {
     private final Stage stage;
     private final Timeline timeline;
     private final Runnable exitToMenu;
+    private final KeyBindings keyBindings = KeyBindings.defaults();
 
     /**
      * @param model      the game being played
@@ -56,39 +57,32 @@ public class GameController {
     }
 
     /**
-     * Handles a key press in the game window.
+     * Handles a key press in the game window: steering keys turn the snake (and start the
+     * game on the first press), other bound keys trigger their action.
      *
      * @param event the key event
      */
     public void handle(KeyEvent event) {
         KeyCode code = event.getCode();
-        Direction direction = directionFor(code);
-        if (direction != null) {
-            model.turn(direction);
-            if (!model.isOver()) {
-                timeline.play();
-            }
-        } else if (code == KeyCode.P) {
-            timeline.stop();
-        } else if (code == KeyCode.TAB) {
-            reset();
-        } else if (code == KeyCode.PLUS || code == KeyCode.EQUALS || code == KeyCode.ADD) {
-            setFullScreen(true);
-        } else if (code == KeyCode.MINUS || code == KeyCode.SUBTRACT) {
-            setFullScreen(false);
-        } else if (code == KeyCode.ESCAPE) {
-            returnToMenu();
+        keyBindings.directionFor(code).ifPresent(this::steer);
+        keyBindings.actionFor(code).ifPresent(this::perform);
+    }
+
+    private void steer(Direction direction) {
+        model.turn(direction);
+        if (!model.isOver()) {
+            timeline.play();
         }
     }
 
-    private Direction directionFor(KeyCode code) {
-        return switch (code) {
-            case UP -> Direction.UP;
-            case DOWN -> Direction.DOWN;
-            case LEFT -> Direction.LEFT;
-            case RIGHT -> Direction.RIGHT;
-            default -> null;
-        };
+    private void perform(GameAction action) {
+        switch (action) {
+            case PAUSE -> timeline.stop();
+            case RESTART -> reset();
+            case FULLSCREEN_ON -> setFullScreen(true);
+            case FULLSCREEN_OFF -> setFullScreen(false);
+            case MENU -> returnToMenu();
+        }
     }
 
     private void reset() {
