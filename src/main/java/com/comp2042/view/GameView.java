@@ -3,6 +3,7 @@ package com.comp2042.view;
 import com.comp2042.model.Direction;
 import com.comp2042.model.GameModel;
 import com.comp2042.model.Position;
+import com.comp2042.model.Snake;
 import com.comp2042.model.coin.Coin;
 import com.comp2042.util.ResourceLoader;
 
@@ -14,13 +15,17 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.StrokeLineJoin;
 import javafx.stage.Screen;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Draws a {@link GameModel} onto a canvas, with the score and end-of-game labels on top.
- * The view only reads the model; it never changes game state.
+ * The view only reads the model; it never changes game state. It is redrawn every frame
+ * of the game loop, and draws the snake between cells for smooth movement.
  */
 public class GameView {
 
@@ -36,11 +41,15 @@ public class GameView {
     private static final String SMALL_LABEL_STYLE = "-fx-font-size: 15;";
 
     private static final String HEAD_SPRITE = "snakehead";
-    private static final String BODY_SPRITE = "snakebody";
-    private static final String TURN_SPRITE = "snaketurnleft";
-    private static final String TAIL_SPRITE = "snaketail";
-    private static final double VERTICAL_ANGLE = 0;
-    private static final double HORIZONTAL_ANGLE = 270;
+    private static final Color BODY_OUTLINE_COLOR = Color.BLACK;
+    private static final Color BODY_COLOR = Color.rgb(0, 128, 0);
+    private static final Color BODY_STRIPE_COLOR = Color.rgb(0, 255, 0);
+    /** Widths as a fraction of a cell, matching the original body sprite. */
+    private static final double BODY_OUTLINE_WIDTH = 0.70;
+    private static final double BODY_WIDTH = 0.58;
+    private static final double BODY_STRIPE_WIDTH = 0.08;
+    /** Points further apart than this (in cells) are on opposite sides of a wrapped border. */
+    private static final double MAX_JOINT_GAP = 1.01;
 
     private final GameModel model;
     private final SpriteManager sprites = new SpriteManager();
@@ -119,7 +128,7 @@ public class GameView {
         gc.setFill(BACKGROUND_COLOR);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         drawCoin(model.getCoin());
-        drawSnake(model.getSnake().getSegments(), model.getSnake().getDirection());
+        drawSnake(model.getSnake(), model.getStepProgress());
         drawObstacles();
 
         scoreLabel.setText("Score: " + model.getScore());
@@ -144,50 +153,92 @@ public class GameView {
     }
 
     /**
-     * Draws the snake, choosing a straight, corner or tail sprite for each segment from the
-     * positions of its neighbours.
+     * Draws the snake part way between cells so it glides instead of jumping.
+     * <p>
+     * The head is drawn {@code progress} of the way from the cell it came from to the cell
+     * it is in, and the tail the same fraction of the way from where it was to where it is.
+     * Every segment in between is a joint of one continuous stroke, so corners stay smooth
+     * and the snake keeps a constant length while it moves.
      */
-    private void drawSnake(List<Position> segments, Direction heading) {
+    private void drawSnake(Snake snake, double progress) {
+        List<Position> segments = snake.getSegments();
+        Direction heading = snake.getDirection();
+        Position head = segments.get(0);
+
+        List<double[]> path = new ArrayList<>();
+        double[] headPoint = interpolate(head.step(heading.opposite()), head, progress);
+        path.add(headPoint);
         for (int i = 1; i < segments.size(); i++) {
             Position segment = segments.get(i);
-            Direction towardsHead = directionBetween(segment, segments.get(i - 1));
-            String sprite;
-            double angle;
-            if (i == segments.size() - 1) {
-                sprite = TAIL_SPRITE;
-                angle = towardsHead.getAngle();
-            } else {
-                Direction towardsTail = directionBetween(segment, segments.get(i + 1));
-                if (towardsHead.isOpposite(towardsTail)) {
-                    sprite = BODY_SPRITE;
-                    angle = towardsHead.getDx() == 0 ? VERTICAL_ANGLE : HORIZONTAL_ANGLE;
-                } else {
-                    sprite = TURN_SPRITE;
-                    angle = cornerAngle(towardsHead, towardsTail);
-                }
-            }
-            drawRotated(sprites.get(sprite), segment, angle);
+            path.add(new double[] {segment.x(), segment.y()});
         }
-        drawRotated(sprites.get(HEAD_SPRITE), segments.get(0), heading.getAngle());
+        Position tail = snake.getTail();
+        Position previousTail = snake.getPreviousTail();
+        if (!previousTail.equals(tail)) {
+            Position tailFrom = tail.step(directionBetween(tail, previousTail));
+            path.add(interpolate(tailFrom, tail, progress));
+        }
+
+        strokeBody(path, BODY_OUTLINE_WIDTH, BODY_OUTLINE_COLOR);
+        strokeBody(path, BODY_WIDTH, BODY_COLOR);
+        strokeBody(path, BODY_STRIPE_WIDTH, BODY_STRIPE_COLOR);
+        drawRotated(sprites.get(HEAD_SPRITE), headPoint[0], headPoint[1], heading.getAngle());
     }
 
     /**
-     * The corner sprite, unrotated, joins the bottom and left edges of a cell. Each
-     * quarter turn clockwise moves the joined edges round by one side.
+     * Linear interpolation between two cells. Positions are not wrapped, so a snake
+     * entering from the opposite edge slides in from just outside the board.
      */
-    private double cornerAngle(Direction a, Direction b) {
-        if (isPair(a, b, Direction.DOWN, Direction.LEFT)) {
-            return 0;
-        } else if (isPair(a, b, Direction.LEFT, Direction.UP)) {
-            return 90;
-        } else if (isPair(a, b, Direction.UP, Direction.RIGHT)) {
-            return 180;
-        }
-        return 270;
+    private double[] interpolate(Position from, Position to, double progress) {
+        return new double[] {
+            from.x() + (to.x() - from.x()) * progress,
+            from.y() + (to.y() - from.y()) * progress
+        };
     }
 
-    private boolean isPair(Direction a, Direction b, Direction first, Direction second) {
-        return (a == first && b == second) || (a == second && b == first);
+    /**
+     * Strokes a path through cell centres. Where two consecutive points are more than one
+     * cell apart the snake has wrapped through a border, so the line is broken there
+     * rather than drawn across the whole board.
+     */
+    private void strokeBody(List<double[]> path, double widthInCells, Color color) {
+        gc.setStroke(color);
+        gc.setFill(color);
+        gc.setLineWidth(widthInCells * cellSize);
+        gc.setLineCap(StrokeLineCap.ROUND);
+        gc.setLineJoin(StrokeLineJoin.ROUND);
+        int runStart = 0;
+        for (int i = 1; i <= path.size(); i++) {
+            boolean endOfRun = i == path.size() || gap(path.get(i - 1), path.get(i)) > MAX_JOINT_GAP;
+            if (endOfRun) {
+                strokeRun(path, runStart, i, widthInCells);
+                runStart = i;
+            }
+        }
+    }
+
+    private void strokeRun(List<double[]> path, int from, int to, double widthInCells) {
+        if (to - from == 1) {
+            double diameter = widthInCells * cellSize;
+            double[] p = path.get(from);
+            gc.fillOval(toPixel(p[0]) - diameter / 2, toPixel(p[1]) - diameter / 2, diameter, diameter);
+            return;
+        }
+        gc.beginPath();
+        gc.moveTo(toPixel(path.get(from)[0]), toPixel(path.get(from)[1]));
+        for (int i = from + 1; i < to; i++) {
+            gc.lineTo(toPixel(path.get(i)[0]), toPixel(path.get(i)[1]));
+        }
+        gc.stroke();
+    }
+
+    private double gap(double[] a, double[] b) {
+        return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+    }
+
+    /** Converts a cell coordinate to the pixel at the centre of that cell. */
+    private double toPixel(double cell) {
+        return cell * cellSize + cellSize / 2;
     }
 
     /**
@@ -211,11 +262,11 @@ public class GameView {
         return Direction.UP;
     }
 
-    /** Draws an image rotated about the centre of a cell by transforming the canvas. */
-    private void drawRotated(Image image, Position cell, double angle) {
+    /** Draws a sprite centred on a (possibly fractional) cell, rotated by transforming the canvas. */
+    private void drawRotated(Image image, double cellX, double cellY, double angle) {
         double half = cellSize / 2;
         gc.save();
-        gc.translate(cell.x() * cellSize + half, cell.y() * cellSize + half);
+        gc.translate(toPixel(cellX), toPixel(cellY));
         gc.rotate(angle);
         gc.drawImage(image, -half, -half, cellSize, cellSize);
         gc.restore();
