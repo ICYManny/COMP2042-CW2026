@@ -25,6 +25,8 @@ public class GameModel {
     private static final int SAFE_DISTANCE = 3;
     private static final int OBSTACLE_DENSITY = 20;
     private static final int MIN_NEW_OBSTACLES = 3;
+    /** Longest frame gap simulated at once, so a stall (e.g. dragging the window) cannot teleport the snake. */
+    private static final double MAX_FRAME_TIME = 0.25;
 
     private final GameSettings settings;
     private final Random random;
@@ -37,6 +39,7 @@ public class GameModel {
     private int score;
     private int coinsEaten;
     private double speed;
+    private double timeSinceStep;
     private boolean ignoreBorders;
     private boolean dead;
     private boolean won;
@@ -83,6 +86,7 @@ public class GameModel {
         won = false;
         coin = new BasicCoin(freeCells.find(this::isOccupied).orElseThrow());
         speed = settings.difficulty().getSpeed();
+        timeSinceStep = 0;
         ignoreBorders = false;
         dead = false;
     }
@@ -98,6 +102,37 @@ public class GameModel {
             return false;
         }
         return snake.turn(direction);
+    }
+
+    /**
+     * Advances the game by real time. The snake moves one cell every {@code 1 / speed}
+     * seconds however often this is called, so drawing can run at a different rate from
+     * the game logic (fixed time step).
+     *
+     * @param elapsedSeconds time since the previous update
+     */
+    public void update(double elapsedSeconds) {
+        if (isOver() || elapsedSeconds <= 0) {
+            return;
+        }
+        timeSinceStep += Math.min(elapsedSeconds, MAX_FRAME_TIME);
+        while (!isOver() && timeSinceStep >= 1.0 / speed) {
+            timeSinceStep -= 1.0 / speed;
+            tick();
+        }
+    }
+
+    /**
+     * How far the snake has travelled from its last cell towards its next one, used to
+     * draw it between cells.
+     *
+     * @return a value from 0 (just arrived) to 1 (about to move); 1 once the game is over
+     */
+    public double getStepProgress() {
+        if (isOver()) {
+            return 1;
+        }
+        return Math.min(1, timeSinceStep * speed);
     }
 
     /** Moves the snake one cell and applies the consequences. Does nothing once the game is over. */
