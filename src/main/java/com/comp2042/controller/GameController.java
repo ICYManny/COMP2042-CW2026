@@ -5,30 +5,31 @@ import com.comp2042.model.GameListener;
 import com.comp2042.model.GameModel;
 import com.comp2042.view.GameView;
 
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 /**
  * Connects keyboard input and the game clock to the model and view.
  * <p>
- * The controller holds no game rules: it turns key presses into model calls, asks the
- * model to advance on every tick of the timeline, and tells the view to redraw.
+ * The controller holds no game rules: it turns key presses into model calls, feeds the
+ * model the time that has passed on every frame of the {@link GameLoop}, and tells the
+ * view to redraw.
  */
 public class GameController {
 
     private final GameModel model;
     private final GameView view;
     private final Stage stage;
-    private final Timeline timeline;
     private final Runnable exitToMenu;
     private final KeyBindings keyBindings = KeyBindings.defaults();
+    private final GameLoop loop;
+    private boolean running;
 
     /**
+     * Creates the controller and starts drawing the game. The snake waits for the first
+     * steering key before it moves.
+     *
      * @param model      the game being played
      * @param view       the view drawing that game
      * @param stage      the window showing the game, used for fullscreen
@@ -39,20 +40,20 @@ public class GameController {
         this.view = view;
         this.stage = stage;
         this.exitToMenu = exitToMenu;
-        timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> step()));
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.setRate(model.getSpeed());
         model.addListener(new GameListener() {
             @Override
             public void onGameOver(boolean won) {
-                timeline.stop();
+                running = false;
             }
         });
+        loop = new GameLoop(this::frame);
+        loop.start();
     }
 
-    private void step() {
-        model.tick();
-        timeline.setRate(model.getSpeed());
+    private void frame(double elapsedSeconds) {
+        if (running) {
+            model.update(elapsedSeconds);
+        }
         view.render();
     }
 
@@ -71,13 +72,13 @@ public class GameController {
     private void steer(Direction direction) {
         model.turn(direction);
         if (!model.isOver()) {
-            timeline.play();
+            running = true;
         }
     }
 
     private void perform(GameAction action) {
         switch (action) {
-            case PAUSE -> timeline.stop();
+            case PAUSE -> running = !running && !model.isOver();
             case RESTART -> reset();
             case FULLSCREEN_ON -> setFullScreen(true);
             case FULLSCREEN_OFF -> setFullScreen(false);
@@ -86,10 +87,8 @@ public class GameController {
     }
 
     private void reset() {
-        timeline.stop();
+        running = false;
         model.reset();
-        timeline.setRate(model.getSpeed());
-        view.render();
     }
 
     private void setFullScreen(boolean fullScreen) {
@@ -98,7 +97,7 @@ public class GameController {
     }
 
     private void returnToMenu() {
-        timeline.stop();
+        loop.stop();
         exitToMenu.run();
     }
 }

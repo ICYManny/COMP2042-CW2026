@@ -58,10 +58,49 @@ class SnakeTest {
     }
 
     @Test
-    void twoQuickTurnsCannotReverseBeforeMoving() {
-        // moving LEFT: UP is fine, but RIGHT is still a reversal because the snake has not moved up yet
+    void twoQuickTurnsAreBothPerformedInOrder() {
         assertTrue(snake.turn(Direction.UP));
-        assertFalse(snake.turn(Direction.RIGHT));
+        assertTrue(snake.turn(Direction.RIGHT));
+        snake.moveTo(snake.nextHead(), false);
+        assertEquals(new Position(10, 9), snake.getHead());
+        snake.moveTo(snake.nextHead(), false);
+        assertEquals(new Position(11, 9), snake.getHead());
+    }
+
+    @Test
+    void queuedTurnCannotReverseTheTurnBeforeIt() {
+        assertTrue(snake.turn(Direction.UP));
+        assertFalse(snake.turn(Direction.DOWN));
+    }
+
+    @Test
+    void queueHoldsAtMostTwoTurns() {
+        assertTrue(snake.turn(Direction.UP));
+        assertTrue(snake.turn(Direction.RIGHT));
+        assertFalse(snake.turn(Direction.DOWN));
+    }
+
+    @Test
+    void pressingTheCurrentDirectionQueuesNothing() {
+        assertFalse(snake.turn(Direction.LEFT));
+        assertTrue(snake.turn(Direction.UP));
+    }
+
+    @Test
+    void directionOnlyChangesWhenTheSnakeMoves() {
+        snake.turn(Direction.UP);
+        assertEquals(Direction.LEFT, snake.getDirection());
+        snake.moveTo(snake.nextHead(), false);
+        assertEquals(Direction.UP, snake.getDirection());
+    }
+
+    @Test
+    void previousTailTracksWhereTheTailCameFrom() {
+        assertEquals(snake.getTail(), snake.getPreviousTail());
+        snake.moveTo(snake.nextHead(), false);
+        assertEquals(new Position(12, 10), snake.getPreviousTail());
+        snake.moveTo(snake.nextHead(), true);
+        assertEquals(snake.getTail(), snake.getPreviousTail());
     }
 
     @Test

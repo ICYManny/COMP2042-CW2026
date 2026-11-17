@@ -15,9 +15,13 @@ import java.util.List;
  */
 public class Snake {
 
+    /** How many turns can be typed ahead of the snake's movement. */
+    public static final int MAX_QUEUED_TURNS = 2;
+
     private final Deque<Position> segments = new ArrayDeque<>();
+    private final Deque<Direction> queuedTurns = new ArrayDeque<>();
     private Direction direction;
-    private Direction lastMovedDirection;
+    private Position previousTail;
 
     /**
      * Creates a straight snake.
@@ -32,49 +36,61 @@ public class Snake {
             throw new IllegalArgumentException("Snake length must be at least 1");
         }
         this.direction = direction;
-        this.lastMovedDirection = direction;
         Position segment = head;
         for (int i = 0; i < length; i++) {
             segments.addLast(segment);
             segment = segment.step(direction.opposite());
         }
+        previousTail = getTail();
     }
 
     /**
-     * Changes the direction the snake will move on its next step.
+     * Queues a turn to happen on a coming step.
      * <p>
-     * A turn is checked against the direction the snake last actually moved, not the last
-     * key pressed. Otherwise pressing two keys quickly within one step (for example UP then
-     * LEFT while moving RIGHT) would reverse the snake into itself.
+     * Up to {@value #MAX_QUEUED_TURNS} turns are remembered, so pressing two keys quickly
+     * within one step (for example UP then LEFT while moving RIGHT) performs both turns on
+     * the next two steps instead of dropping the second key. Each turn is checked against
+     * the direction the snake will be facing when it happens, so a queued turn can never
+     * reverse the snake into itself.
      *
      * @param newDirection requested direction
-     * @return true if the turn was accepted, false if it would reverse the snake
+     * @return true if the turn was queued; false if it would reverse the snake, does not
+     *         change direction, or the queue is full
      */
     public boolean turn(Direction newDirection) {
-        if (newDirection.isOpposite(lastMovedDirection) && segments.size() > 1) {
+        Direction facing = queuedTurns.isEmpty() ? direction : queuedTurns.peekLast();
+        boolean reverses = newDirection.isOpposite(facing) && segments.size() > 1;
+        if (reverses || newDirection == facing || queuedTurns.size() >= MAX_QUEUED_TURNS) {
             return false;
         }
-        direction = newDirection;
+        queuedTurns.addLast(newDirection);
         return true;
     }
 
-    /** @return the cell the head will enter next, before any wrapping is applied */
+    /** @return the cell the head will enter next (including any queued turn), before wrapping */
     public Position nextHead() {
-        return getHead().step(direction);
+        return getHead().step(nextDirection());
+    }
+
+    private Direction nextDirection() {
+        return queuedTurns.isEmpty() ? direction : queuedTurns.peekFirst();
     }
 
     /**
-     * Moves the head to a new cell.
+     * Moves the head to a new cell, performing the next queued turn if there is one.
      *
      * @param newHead cell the head moves into (already wrapped if needed)
      * @param grow    true to keep the tail, making the snake one segment longer
      */
     public void moveTo(Position newHead, boolean grow) {
+        direction = nextDirection();
+        queuedTurns.pollFirst();
+        Position oldTail = getTail();
         segments.addFirst(newHead);
         if (!grow) {
             segments.removeLast();
         }
-        lastMovedDirection = direction;
+        previousTail = grow ? getTail() : oldTail;
     }
 
     /**
@@ -128,7 +144,17 @@ public class Snake {
         return segments.size();
     }
 
-    /** @return the direction the snake will move next */
+    /**
+     * Where the tail was before the last move. The view slides the tail from here to
+     * {@link #getTail()} so movement looks continuous. Equal to the tail after growing.
+     *
+     * @return the tail position before the last move
+     */
+    public Position getPreviousTail() {
+        return previousTail;
+    }
+
+    /** @return the direction the snake last moved in (queued turns not included) */
     public Direction getDirection() {
         return direction;
     }
