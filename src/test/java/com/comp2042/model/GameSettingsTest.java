@@ -9,8 +9,8 @@ class GameSettingsTest {
 
     @Test
     void tooSmallGridIsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> new GameSettings(4, 20, false, Difficulty.NORMAL));
-        assertThrows(IllegalArgumentException.class, () -> new GameSettings(20, 0, false, Difficulty.NORMAL));
+        assertThrows(IllegalArgumentException.class, () -> new GameSettings(4, 20, false, Difficulty.HARD));
+        assertThrows(IllegalArgumentException.class, () -> new GameSettings(20, 0, false, Difficulty.HARD));
     }
 
     @Test

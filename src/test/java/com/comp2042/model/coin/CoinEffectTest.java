@@ -19,7 +19,7 @@ class CoinEffectTest {
 
     @BeforeEach
     void setUp() {
-        game = new GameModel(new GameSettings(20, 20, true, Difficulty.NORMAL), new Random(8));
+        game = new GameModel(new GameSettings(20, 20, true, Difficulty.HARD), new Random(8));
     }
 
     @Test

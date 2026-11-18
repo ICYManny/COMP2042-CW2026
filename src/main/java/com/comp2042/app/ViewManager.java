@@ -2,6 +2,7 @@ package com.comp2042.app;
 
 import com.comp2042.controller.GameController;
 import com.comp2042.controller.MainMenuController;
+import com.comp2042.model.Difficulty;
 import com.comp2042.model.GameModel;
 import com.comp2042.model.GameSettings;
 import com.comp2042.util.ResourceLoader;
@@ -30,6 +31,7 @@ public class ViewManager {
     private static final String ICON = "/views/res/SnakeLogoWhite.png";
 
     private final Stage stage;
+    private GameSettings lastSettings = new GameSettings(20, 20, true, Difficulty.MEDIUM);
 
     /**
      * @param stage the application window
@@ -67,6 +69,7 @@ public class ViewManager {
      * @param settings options chosen in the menu
      */
     public void showGame(GameSettings settings) {
+        lastSettings = settings;
         GameModel model = new GameModel(settings);
         GameView view = new GameView(model);
         GameController controller = new GameController(model, view, stage, this::showMainMenu);
@@ -74,5 +77,10 @@ public class ViewManager {
         scene.setOnKeyPressed(controller::handle);
         stage.setScene(scene);
         stage.sizeToScene();
+    }
+
+    /** @return the settings of the most recent game, so the menu can show the same choices again */
+    public GameSettings getLastSettings() {
+        return lastSettings;
     }
 }
