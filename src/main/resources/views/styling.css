@@ -44,7 +44,21 @@
 
 .label {
     -fx-font-family: "SF Pixelate";
-    -fx-font-size: 35;
+    -fx-font-size: 18;
+}
+
+.menuLabel {
+    -fx-font-size: 18;
+}
+
+.hint {
+    -fx-font-size: 12;
+    -fx-text-fill: #555555;
+}
+
+.choice-box, .choice-box .label, .menu-item .label, .check-box, .check-box .label {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 14;
 }
 
 #title {
