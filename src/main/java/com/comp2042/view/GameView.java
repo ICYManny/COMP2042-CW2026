@@ -4,6 +4,7 @@ import com.comp2042.model.Direction;
 import com.comp2042.model.GameModel;
 import com.comp2042.model.Position;
 import com.comp2042.model.Snake;
+import com.comp2042.model.WallMode;
 import com.comp2042.model.coin.Coin;
 import com.comp2042.util.ResourceLoader;
 
@@ -31,6 +32,9 @@ public class GameView {
 
     private static final Color BACKGROUND_COLOR = Color.web("feffe4");
     private static final Color OBSTACLE_COLOR = Color.BLACK;
+    private static final Color WALL_COLOR = Color.web("8b1e1e");
+    /** Thickness of a solid wall as a fraction of a cell. */
+    private static final double WALL_THICKNESS = 0.15;
     private static final int LARGE_GRID_HEIGHT = 50;
     private static final double SMALL_CELL_SIZE = 10;
     private static final double LARGE_CELL_SIZE = 20;
@@ -130,6 +134,7 @@ public class GameView {
         drawCoin(model.getCoin());
         drawSnake(model.getSnake(), model.getStepProgress());
         drawObstacles();
+        drawWalls();
 
         scoreLabel.setText("Score: " + model.getScore());
         gameOverLabel.setVisible(model.isDead());
@@ -143,6 +148,26 @@ public class GameView {
         Position p = coin.getPosition();
         double size = cellSize - COIN_MARGIN * (cellSize / baseCellSize);
         gc.drawImage(sprites.get(coin.getSpriteKey()), p.x() * cellSize, p.y() * cellSize, size, size);
+    }
+
+    /**
+     * Draws a red line along every solid edge, so the player can see which walls kill and
+     * which ones wrap round. The lines disappear while a wall-passing effect is active.
+     */
+    private void drawWalls() {
+        WallMode walls = model.getWallMode();
+        double thickness = Math.max(2, cellSize * WALL_THICKNESS);
+        double width = model.getWidth() * cellSize;
+        double height = model.getHeight() * cellSize;
+        gc.setFill(WALL_COLOR);
+        if (!walls.wrapsVertically()) {
+            gc.fillRect(0, 0, width, thickness);
+            gc.fillRect(0, height - thickness, width, thickness);
+        }
+        if (!walls.wrapsHorizontally()) {
+            gc.fillRect(0, 0, thickness, height);
+            gc.fillRect(width - thickness, 0, thickness, height);
+        }
     }
 
     private void drawObstacles() {
