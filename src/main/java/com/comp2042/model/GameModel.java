@@ -140,14 +140,12 @@ public class GameModel {
         if (isOver()) {
             return;
         }
-        Position next = snake.nextHead();
-        if (!next.isInside(settings.width(), settings.height())) {
-            if (!wrapsAtBorders()) {
-                die();
-                return;
-            }
-            next = next.wrap(settings.width(), settings.height());
+        Optional<Position> landing = getWallMode().resolve(snake.nextHead(), settings.width(), settings.height());
+        if (landing.isEmpty()) {
+            die();
+            return;
         }
+        Position next = landing.get();
         boolean eating = coin != null && next.equals(coin.getPosition());
         if (obstacles.contains(next) || snake.collidesWithBody(next, eating)) {
             die();
@@ -228,8 +226,12 @@ public class GameModel {
                 || head.distanceTo(cell) < SAFE_DISTANCE);
     }
 
-    private boolean wrapsAtBorders() {
-        return ignoreBorders || settings.difficulty().wrapsAtBorders();
+    /**
+     * @return the edge rule currently in force: the difficulty's rule, or wrapping on every
+     *         side while a wall-passing effect is active
+     */
+    public WallMode getWallMode() {
+        return ignoreBorders ? WallMode.WRAP_ALL : settings.difficulty().getWallMode();
     }
 
     /** @return true if the player has won or lost */

@@ -12,7 +12,7 @@ public class MainMenuController {
     private static final int GRID_WIDTH = 20;
     private static final int GRID_HEIGHT = 20;
     private static final boolean POWER_UPS = true;
-    private static final Difficulty DIFFICULTY = Difficulty.NORMAL;
+    private static final Difficulty DIFFICULTY = Difficulty.MEDIUM;
 
     private final ViewManager viewManager;
 

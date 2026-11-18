@@ -30,7 +30,7 @@ class GameModelTest {
 
     @Test
     void newGameStartsInTheCentreFacingLeft() {
-        GameModel game = newGame(Difficulty.NORMAL);
+        GameModel game = newGame(Difficulty.HARD);
         assertEquals(new Position(10, 10), game.getSnake().getHead());
         assertEquals(Direction.LEFT, game.getSnake().getDirection());
         assertEquals(0, game.getScore());
@@ -40,14 +40,14 @@ class GameModelTest {
     @Test
     void firstCoinIsNeverOnTheSnake() {
         for (int seed = 0; seed < 50; seed++) {
-            GameModel game = new GameModel(new GameSettings(20, 20, false, Difficulty.NORMAL), new Random(seed));
+            GameModel game = new GameModel(new GameSettings(20, 20, false, Difficulty.HARD), new Random(seed));
             assertFalse(game.getSnake().occupies(game.getCoin().getPosition()));
         }
     }
 
     @Test
     void tickMovesTheSnakeOneCell() {
-        GameModel game = newGame(Difficulty.NORMAL);
+        GameModel game = newGame(Difficulty.HARD);
         game.placeCoin(new BasicCoin(new Position(0, 0)));
         game.tick();
         assertEquals(new Position(9, 10), game.getSnake().getHead());
@@ -55,7 +55,7 @@ class GameModelTest {
 
     @Test
     void hittingAWallKillsTheSnakeWhenWallsAreSolid() {
-        GameModel game = newGame(Difficulty.NORMAL);
+        GameModel game = newGame(Difficulty.HARD);
         game.placeCoin(new BasicCoin(new Position(0, 0)));
         tick(game, 11);
         assertTrue(game.isDead());
@@ -73,7 +73,7 @@ class GameModelTest {
 
     @Test
     void eatingACoinAddsPointsAndGrowsTheSnake() {
-        GameModel game = newGame(Difficulty.NORMAL);
+        GameModel game = newGame(Difficulty.HARD);
         game.placeCoin(new GoldCoin(new Position(9, 10)));
         game.tick();
         assertEquals(15, game.getScore());
@@ -103,7 +103,7 @@ class GameModelTest {
 
     @Test
     void runningIntoItselfKillsTheSnake() {
-        GameModel game = newGame(Difficulty.NORMAL);
+        GameModel game = newGame(Difficulty.HARD);
         // grow to length 5 by eating coins placed in its path
         for (int x = 9; x >= 7; x--) {
             game.placeCoin(new BasicCoin(new Position(x, 10)));
@@ -121,7 +121,7 @@ class GameModelTest {
 
     @Test
     void nothingMovesAfterTheGameIsOver() {
-        GameModel game = newGame(Difficulty.NORMAL);
+        GameModel game = newGame(Difficulty.HARD);
         game.placeCoin(new BasicCoin(new Position(0, 0)));
         tick(game, 11);
         Position head = game.getSnake().getHead();
@@ -132,7 +132,7 @@ class GameModelTest {
 
     @Test
     void resetRestoresTheStartingState() {
-        GameModel game = newGame(Difficulty.NORMAL);
+        GameModel game = newGame(Difficulty.HARD);
         game.placeCoin(new GoldCoin(new Position(9, 10)));
         game.tick();
         game.getObstacles().add(new Position(1, 1));
@@ -146,7 +146,7 @@ class GameModelTest {
     @Test
     void fillingTheBoardWinsInsteadOfFreezing() {
         // 5x5 board: block every cell except the snake and one coin cell in front of it
-        GameModel game = new GameModel(new GameSettings(5, 5, false, Difficulty.NORMAL), new Random(1));
+        GameModel game = new GameModel(new GameSettings(5, 5, false, Difficulty.HARD), new Random(1));
         Position coinCell = new Position(1, 2);
         for (int x = 0; x < 5; x++) {
             for (int y = 0; y < 5; y++) {
@@ -164,7 +164,7 @@ class GameModelTest {
 
     @Test
     void listenersHearAboutCoinsAndTheEndOfTheGame() {
-        GameModel game = newGame(Difficulty.NORMAL);
+        GameModel game = newGame(Difficulty.HARD);
         List<Coin> eaten = new ArrayList<>();
         List<Boolean> endings = new ArrayList<>();
         game.addListener(new GameListener() {
