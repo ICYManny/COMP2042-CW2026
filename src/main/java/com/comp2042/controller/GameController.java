@@ -1,7 +1,6 @@
 package com.comp2042.controller;
 
 import com.comp2042.model.Direction;
-import com.comp2042.model.GameListener;
 import com.comp2042.model.GameModel;
 import com.comp2042.view.GameView;
 
@@ -24,7 +23,6 @@ public class GameController {
     private final Runnable exitToMenu;
     private final KeyBindings keyBindings = KeyBindings.defaults();
     private final GameLoop loop;
-    private boolean running;
 
     /**
      * Creates the controller and starts drawing the game. The snake waits for the first
@@ -40,20 +38,13 @@ public class GameController {
         this.view = view;
         this.stage = stage;
         this.exitToMenu = exitToMenu;
-        model.addListener(new GameListener() {
-            @Override
-            public void onGameOver(boolean won) {
-                running = false;
-            }
-        });
+        view.setOverlayActions(this::reset, model::start, this::returnToMenu);
         loop = new GameLoop(this::frame);
         loop.start();
     }
 
     private void frame(double elapsedSeconds) {
-        if (running) {
-            model.update(elapsedSeconds);
-        }
+        model.update(elapsedSeconds);
         view.render();
     }
 
@@ -71,14 +62,12 @@ public class GameController {
 
     private void steer(Direction direction) {
         model.turn(direction);
-        if (!model.isOver()) {
-            running = true;
-        }
+        model.start();
     }
 
     private void perform(GameAction action) {
         switch (action) {
-            case PAUSE -> running = !running && !model.isOver();
+            case PAUSE -> model.togglePause();
             case RESTART -> reset();
             case FULLSCREEN_ON -> setFullScreen(true);
             case FULLSCREEN_OFF -> setFullScreen(false);
@@ -87,7 +76,6 @@ public class GameController {
     }
 
     private void reset() {
-        running = false;
         model.reset();
     }
 

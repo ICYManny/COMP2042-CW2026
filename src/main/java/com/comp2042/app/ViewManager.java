@@ -12,6 +12,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -74,7 +75,8 @@ public class ViewManager {
         GameView view = new GameView(model);
         GameController controller = new GameController(model, view, stage, this::showMainMenu);
         Scene scene = new Scene(view.getRoot(), view.getPreferredWidth(), view.getPreferredHeight());
-        scene.setOnKeyPressed(controller::handle);
+        // A filter sees keys before any button does, so the overlay buttons cannot swallow them.
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, controller::handle);
         stage.setScene(scene);
         stage.sizeToScene();
     }

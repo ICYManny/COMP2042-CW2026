@@ -2,6 +2,7 @@ package com.comp2042.view;
 
 import com.comp2042.model.Direction;
 import com.comp2042.model.GameModel;
+import com.comp2042.model.GameState;
 import com.comp2042.model.Position;
 import com.comp2042.model.Snake;
 import com.comp2042.model.WallMode;
@@ -40,9 +41,8 @@ public class GameView {
     private static final double LARGE_CELL_SIZE = 20;
     private static final double COIN_MARGIN = 3;
 
-    private static final String LARGE_LABEL_STYLE = "-fx-font-size: 50;";
     private static final String LARGE_SCORE_STYLE = "-fx-font-size: 35;";
-    private static final String SMALL_LABEL_STYLE = "-fx-font-size: 15;";
+    private static final String SMALL_SCORE_STYLE = "-fx-font-size: 15;";
 
     private static final String HEAD_SPRITE = "snakehead";
     private static final Color BODY_OUTLINE_COLOR = Color.BLACK;
@@ -63,9 +63,10 @@ public class GameView {
     private final StackPane root = new StackPane();
     private final Canvas canvas;
     private final GraphicsContext gc;
-    private final Label gameOverLabel = new Label("GAME OVER");
-    private final Label gameWonLabel = new Label("YOU WON!");
     private final Label scoreLabel = new Label();
+    private final OverlayPane overlay = new OverlayPane();
+    private GameState shownState;
+    private int shownScore = -1;
 
     /**
      * Builds the game screen for a model.
@@ -81,13 +82,10 @@ public class GameView {
 
         String css = ResourceLoader.externalForm("/views/styling.css");
         root.getStylesheets().add(css);
-        gameOverLabel.setId("gameOverLabel");
-        gameWonLabel.setId("gameWonLabel");
         scoreLabel.setId("scoreLabel");
-        root.getChildren().addAll(canvas, gameOverLabel, gameWonLabel, scoreLabel);
-        StackPane.setAlignment(gameOverLabel, Pos.TOP_CENTER);
-        StackPane.setAlignment(gameWonLabel, Pos.TOP_CENTER);
+        root.getChildren().addAll(canvas, scoreLabel, overlay.getNode());
         StackPane.setAlignment(scoreLabel, Pos.BOTTOM_CENTER);
+        StackPane.setAlignment(overlay.getNode(), Pos.CENTER);
         render();
     }
 
@@ -121,9 +119,7 @@ public class GameView {
         cellSize = baseCellSize * scale;
         canvas.setWidth(getPreferredWidth() * scale);
         canvas.setHeight(getPreferredHeight() * scale);
-        gameOverLabel.setStyle(fullScreen ? LARGE_LABEL_STYLE : SMALL_LABEL_STYLE);
-        gameWonLabel.setStyle(fullScreen ? LARGE_LABEL_STYLE : SMALL_LABEL_STYLE);
-        scoreLabel.setStyle(fullScreen ? LARGE_SCORE_STYLE : SMALL_LABEL_STYLE);
+        scoreLabel.setStyle(fullScreen ? LARGE_SCORE_STYLE : SMALL_SCORE_STYLE);
         render();
     }
 
@@ -137,8 +133,27 @@ public class GameView {
         drawWalls();
 
         scoreLabel.setText("Score: " + model.getScore());
-        gameOverLabel.setVisible(model.isDead());
-        gameWonLabel.setVisible(model.isWon());
+        updateOverlay();
+    }
+
+    /** Updates the overlay only when the state or score changed, not on every frame. */
+    private void updateOverlay() {
+        if (model.getState() != shownState || model.getScore() != shownScore) {
+            shownState = model.getState();
+            shownScore = model.getScore();
+            overlay.show(shownState, shownScore);
+        }
+    }
+
+    /**
+     * Sets what the overlay buttons do.
+     *
+     * @param onRetry  starts a new game
+     * @param onResume resumes a paused game
+     * @param onMenu   returns to the main menu
+     */
+    public void setOverlayActions(Runnable onRetry, Runnable onResume, Runnable onMenu) {
+        overlay.setActions(onRetry, onResume, onMenu);
     }
 
     private void drawCoin(Coin coin) {
