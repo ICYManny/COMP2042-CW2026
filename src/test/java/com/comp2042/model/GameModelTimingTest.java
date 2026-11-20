@@ -20,6 +20,21 @@ class GameModelTimingTest {
         game = new GameModel(new GameSettings(20, 20, false, Difficulty.EASY), new Random(4));
         game.placeCoin(new BasicCoin(new Position(0, 0)));
         stepTime = 1.0 / game.getSpeed();
+        game.start();
+    }
+
+    @Test
+    void updateDoesNothingBeforeTheGameStarts() {
+        GameModel waiting = new GameModel(new GameSettings(20, 20, false, Difficulty.EASY), new Random(4));
+        waiting.update(5);
+        assertEquals(new Position(10, 10), waiting.getSnake().getHead());
+    }
+
+    @Test
+    void updateDoesNothingWhilePaused() {
+        game.togglePause();
+        game.update(stepTime * 3);
+        assertEquals(new Position(10, 10), game.getSnake().getHead());
     }
 
     @Test
