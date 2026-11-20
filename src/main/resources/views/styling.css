@@ -66,13 +66,14 @@
     -fx-font-size: 40;
 }
 
-#gameOverLabel {
-    -fx-font-family: "SF Pixelate";
+#overlayTitle {
+    -fx-font-family: "SF Pixelate Shaded", bold;
     -fx-font-size: 30;
+    -fx-text-fill: #1b5e20;
 }
-#gameWonLabel {
+#overlayDetail {
     -fx-font-family: "SF Pixelate";
-    -fx-font-size: 30;
+    -fx-font-size: 16;
 }
 #scoreLabel {
     -fx-font-family: "SF Pixelate";

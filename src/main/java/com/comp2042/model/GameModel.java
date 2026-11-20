@@ -41,8 +41,7 @@ public class GameModel {
     private double speed;
     private double timeSinceStep;
     private boolean ignoreBorders;
-    private boolean dead;
-    private boolean won;
+    private GameState state;
 
     /**
      * Creates a new game, ready to play.
@@ -83,12 +82,27 @@ public class GameModel {
         snake = new Snake(new Position(settings.width() / 2, settings.height() / 2), Direction.LEFT, STARTING_LENGTH);
         score = 0;
         coinsEaten = 0;
-        won = false;
         coin = new BasicCoin(freeCells.find(this::isOccupied).orElseThrow());
         speed = settings.difficulty().getSpeed();
         timeSinceStep = 0;
         ignoreBorders = false;
-        dead = false;
+        state = GameState.READY;
+    }
+
+    /** Starts the game from READY, or resumes it from PAUSED. Does nothing in other states. */
+    public void start() {
+        if (state == GameState.READY || state == GameState.PAUSED) {
+            state = GameState.PLAYING;
+        }
+    }
+
+    /** Pauses a running game, or resumes a paused one. Does nothing in other states. */
+    public void togglePause() {
+        if (state == GameState.PLAYING) {
+            state = GameState.PAUSED;
+        } else if (state == GameState.PAUSED) {
+            state = GameState.PLAYING;
+        }
     }
 
     /**
@@ -112,11 +126,11 @@ public class GameModel {
      * @param elapsedSeconds time since the previous update
      */
     public void update(double elapsedSeconds) {
-        if (isOver() || elapsedSeconds <= 0) {
+        if (state != GameState.PLAYING || elapsedSeconds <= 0) {
             return;
         }
         timeSinceStep += Math.min(elapsedSeconds, MAX_FRAME_TIME);
-        while (!isOver() && timeSinceStep >= 1.0 / speed) {
+        while (state == GameState.PLAYING && timeSinceStep >= 1.0 / speed) {
             timeSinceStep -= 1.0 / speed;
             tick();
         }
@@ -158,7 +172,7 @@ public class GameModel {
     }
 
     private void die() {
-        dead = true;
+        state = GameState.GAME_OVER;
         listeners.forEach(listener -> listener.onGameOver(false));
     }
 
@@ -173,7 +187,7 @@ public class GameModel {
         Optional<Position> cell = freeCells.find(this::isOccupied);
         if (cell.isEmpty()) {
             coin = null;
-            won = true;
+            state = GameState.WON;
             listeners.forEach(listener -> listener.onGameOver(true));
         } else {
             coin = coinFactory.create(cell.get(), obstacles.count() > 0);
@@ -234,19 +248,24 @@ public class GameModel {
         return ignoreBorders ? WallMode.WRAP_ALL : settings.difficulty().getWallMode();
     }
 
+    /** @return the current stage of the game */
+    public GameState getState() {
+        return state;
+    }
+
     /** @return true if the player has won or lost */
     public boolean isOver() {
-        return dead || isWon();
+        return state.isFinished();
     }
 
     /** @return true if the snake has crashed */
     public boolean isDead() {
-        return dead;
+        return state == GameState.GAME_OVER;
     }
 
     /** @return true if the snake has filled every free cell */
     public boolean isWon() {
-        return won;
+        return state == GameState.WON;
     }
 
     /** @return number of coins eaten so far */
