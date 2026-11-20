@@ -7,6 +7,7 @@ import com.comp2042.model.GameModel;
 import com.comp2042.model.GameSettings;
 import com.comp2042.util.ResourceLoader;
 import com.comp2042.view.GameView;
+import com.comp2042.view.SoundEffects;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -73,6 +74,7 @@ public class ViewManager {
         lastSettings = settings;
         GameModel model = new GameModel(settings);
         GameView view = new GameView(model);
+        model.addListener(new SoundEffects());
         GameController controller = new GameController(model, view, stage, this::showMainMenu);
         Scene scene = new Scene(view.getRoot(), view.getPreferredWidth(), view.getPreferredHeight());
         // A filter sees keys before any button does, so the overlay buttons cannot swallow them.
