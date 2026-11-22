@@ -38,7 +38,7 @@ public class GameController {
         this.view = view;
         this.stage = stage;
         this.exitToMenu = exitToMenu;
-        view.setOverlayActions(this::reset, model::start, this::returnToMenu);
+        view.setOverlayActions(this::reset, model::start, model::nextLevel, this::returnToMenu);
         loop = new GameLoop(this::frame);
         loop.start();
     }
@@ -72,6 +72,19 @@ public class GameController {
             case FULLSCREEN_ON -> setFullScreen(true);
             case FULLSCREEN_OFF -> setFullScreen(false);
             case MENU -> returnToMenu();
+            case CONTINUE -> continueGame();
+        }
+    }
+
+    /** Enter moves the game on from whichever screen is showing. */
+    private void continueGame() {
+        switch (model.getState()) {
+            case LEVEL_COMPLETE -> model.nextLevel();
+            case PAUSED -> model.start();
+            case GAME_OVER, WON -> reset();
+            default -> {
+                // nothing to continue while ready or playing
+            }
         }
     }
 

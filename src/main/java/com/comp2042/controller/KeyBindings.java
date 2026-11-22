@@ -22,7 +22,7 @@ public class KeyBindings {
 
     /**
      * Creates the default controls: W A S D to steer, P to pause, R to restart,
-     * + / - to enter and leave fullscreen, Escape for the menu.
+     * + / - to enter and leave fullscreen, Escape for the menu, Enter to continue.
      *
      * @return the default key bindings
      */
@@ -40,6 +40,7 @@ public class KeyBindings {
         bindings.bind(KeyCode.MINUS, GameAction.FULLSCREEN_OFF);
         bindings.bind(KeyCode.SUBTRACT, GameAction.FULLSCREEN_OFF);
         bindings.bind(KeyCode.ESCAPE, GameAction.MENU);
+        bindings.bind(KeyCode.ENTER, GameAction.CONTINUE);
         return bindings;
     }
 
