@@ -1,6 +1,7 @@
 package com.comp2042.view;
 
-import com.comp2042.model.GameState;
+import com.comp2042.model.GameModel;
+import com.comp2042.model.level.Level;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -25,10 +26,11 @@ public class OverlayPane {
     private final Label detail = new Label();
     private final Button retryButton = makeButton("Retry");
     private final Button resumeButton = makeButton("Resume");
+    private final Button nextButton = makeButton("Next");
     private final Button menuButton = makeButton("Menu");
     private final HBox buttons = new HBox(12);
 
-    /** Builds the panel, hidden until {@link #show(GameState, int)} is called. */
+    /** Builds the panel, hidden until {@link #show(GameModel)} is called. */
     public OverlayPane() {
         title.setId("overlayTitle");
         detail.setId("overlayDetail");
@@ -55,28 +57,34 @@ public class OverlayPane {
     /**
      * Sets what the buttons do.
      *
-     * @param onRetry  starts a new game
-     * @param onResume resumes a paused game
-     * @param onMenu   returns to the main menu
+     * @param onRetry     starts a new game
+     * @param onResume    resumes a paused game
+     * @param onNextLevel starts the next level
+     * @param onMenu      returns to the main menu
      */
-    public void setActions(Runnable onRetry, Runnable onResume, Runnable onMenu) {
+    public void setActions(Runnable onRetry, Runnable onResume, Runnable onNextLevel, Runnable onMenu) {
         retryButton.setOnAction(event -> onRetry.run());
         resumeButton.setOnAction(event -> onResume.run());
+        nextButton.setOnAction(event -> onNextLevel.run());
         menuButton.setOnAction(event -> onMenu.run());
     }
 
     /**
      * Shows the right message for the game's state, or hides the panel while playing.
      *
-     * @param state the game's current state
-     * @param score the current score
+     * @param model the game to describe
      */
-    public void show(GameState state, int score) {
-        switch (state) {
-            case READY -> display("Ready?", "Press W, A, S or D to start");
-            case PAUSED -> display("Paused", "Score: " + score, resumeButton, menuButton);
-            case GAME_OVER -> display("Game Over", "Score: " + score, retryButton, menuButton);
-            case WON -> display("You Won!", "Score: " + score, retryButton, menuButton);
+    public void show(GameModel model) {
+        Level level = model.getLevel();
+        String score = "Score: " + model.getScore();
+        switch (model.getState()) {
+            case READY -> display(level.isEndless() ? "Ready?" : "Level " + level.number() + ": " + level.name(),
+                    level.isEndless() ? "Press W, A, S or D to start"
+                            : "Eat " + level.coinsToClear() + " coins. Press W, A, S or D to start");
+            case PAUSED -> display("Paused", score + "   (Enter or P to resume)", resumeButton, menuButton);
+            case LEVEL_COMPLETE -> display("Level Clear!", score + "   (Enter for the next level)", nextButton, menuButton);
+            case GAME_OVER -> display("Game Over", score + "   (Enter to retry)", retryButton, menuButton);
+            case WON -> display("You Won!", score, retryButton, menuButton);
             default -> panel.setVisible(false);
         }
     }

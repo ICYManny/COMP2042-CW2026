@@ -3,6 +3,7 @@ package com.comp2042.model;
 import com.comp2042.model.coin.BasicCoin;
 import com.comp2042.model.coin.Coin;
 import com.comp2042.model.coin.CoinFactory;
+import com.comp2042.model.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,9 @@ public class GameModel {
     private final FreeCellFinder freeCells;
     private final CoinFactory coinFactory;
     private final List<GameListener> listeners = new ArrayList<>();
+    private final List<Level> levels;
+    private int levelIndex;
+    private int coinsThisLevel;
     private Snake snake;
     private Coin coin;
     private int score;
@@ -47,24 +51,62 @@ public class GameModel {
     private GameState state;
 
     /**
-     * Creates a new game, ready to play.
+     * Creates an endless game (no walls, no level target).
      *
      * @param settings the options chosen in the main menu
      */
     public GameModel(GameSettings settings) {
-        this(settings, new Random());
+        this(settings, new Random(), List.of(Level.endless()));
     }
 
     /**
-     * Creates a new game using a given random generator, so tests can make coin and
+     * Creates an endless game using a given random generator, so tests can make coin and
      * obstacle placement repeatable.
      *
      * @param settings the options chosen in the main menu
      * @param random   source of randomness
      */
     public GameModel(GameSettings settings, Random random) {
+        this(settings, random, List.of(Level.endless()));
+    }
+
+    /**
+     * Creates a game played through a list of levels.
+     *
+     * @param settings the options chosen in the main menu
+     * @param levels   the levels, in order
+     */
+    public GameModel(GameSettings settings, List<Level> levels) {
+        this(settings, new Random(), levels);
+    }
+
+    /**
+     * Creates a game played through a list of levels with a given random generator.
+     *
+     * @param settings the options chosen in the main menu
+     * @param random   source of randomness
+     * @param levels   the levels, in order
+     * @throws IllegalArgumentException if there are no levels, the start level does not
+     *                                  exist, or a level's walls do not fit on the grid
+     */
+    public GameModel(GameSettings settings, Random random, List<Level> levels) {
+        if (levels.isEmpty()) {
+            throw new IllegalArgumentException("At least one level is needed");
+        }
+        if (settings.startLevel() > levels.size()) {
+            throw new IllegalArgumentException("Start level " + settings.startLevel() + " does not exist");
+        }
+        for (Level level : levels) {
+            for (Position wall : level.walls()) {
+                if (!wall.isInside(settings.width(), settings.height())) {
+                    throw new IllegalArgumentException(level + " does not fit on a "
+                            + settings.width() + "x" + settings.height() + " grid");
+                }
+            }
+        }
         this.settings = settings;
         this.random = random;
+        this.levels = List.copyOf(levels);
         this.freeCells = new FreeCellFinder(settings.width(), settings.height(), random);
         this.coinFactory = new CoinFactory(random, settings.powerUpsEnabled());
         reset();
@@ -79,16 +121,32 @@ public class GameModel {
         listeners.add(listener);
     }
 
-    /** Puts the game back to its starting state. */
+    /** Puts the game back to its starting state: the starting level, with no score. */
     public void reset() {
-        obstacles.clear();
-        snake = new Snake(new Position(settings.width() / 2, settings.height() / 2), Direction.LEFT, STARTING_LENGTH);
+        levelIndex = settings.startLevel() - 1;
         score = 0;
         coinsEaten = 0;
-        coin = new BasicCoin(freeCells.find(this::isOccupied).orElseThrow());
+        loadLevel();
+    }
+
+    /** Moves on to the next level after one has been completed. Does nothing in other states. */
+    public void nextLevel() {
+        if (state == GameState.LEVEL_COMPLETE) {
+            levelIndex++;
+            loadLevel();
+        }
+    }
+
+    /** Sets up the current level: its walls, a fresh snake and a first coin. The score is kept. */
+    private void loadLevel() {
+        obstacles.clear();
+        obstacles.setWalls(getLevel().walls());
+        snake = new Snake(new Position(settings.width() / 2, settings.height() / 2), Direction.LEFT, STARTING_LENGTH);
+        coinsThisLevel = 0;
         effects.clear();
         timeSinceStep = 0;
         state = GameState.READY;
+        coin = new BasicCoin(freeCells.find(this::isOccupied).orElseThrow());
     }
 
     /** Starts the game from READY, or resumes it from PAUSED. Does nothing in other states. */
@@ -108,16 +166,21 @@ public class GameModel {
     }
 
     /**
-     * Asks the snake to turn. Ignored once the game has ended.
+     * Asks the snake to turn. Ignored once the game has ended or a level is complete.
      *
      * @param direction requested direction
      * @return true if the turn was accepted
      */
     public boolean turn(Direction direction) {
-        if (isOver()) {
+        if (!canMove()) {
             return false;
         }
         return snake.turn(direction);
+    }
+
+    /** @return false once the game has ended or while a completed level is waiting */
+    private boolean canMove() {
+        return !isOver() && state != GameState.LEVEL_COMPLETE;
     }
 
     /**
@@ -153,9 +216,12 @@ public class GameModel {
         return Math.min(1, timeSinceStep * getSpeed());
     }
 
-    /** Moves the snake one cell and applies the consequences. Does nothing once the game is over. */
+    /**
+     * Moves the snake one cell and applies the consequences. Does nothing once the game is
+     * over or while waiting for the next level.
+     */
     public void tick() {
-        if (isOver()) {
+        if (!canMove()) {
             return;
         }
         Optional<Position> landing = getWallMode().resolve(snake.nextHead(), settings.width(), settings.height());
@@ -187,14 +253,31 @@ public class GameModel {
         int multiplier = effects.isActive(Effect.DOUBLE_POINTS) ? DOUBLE_POINTS_FACTOR : 1;
         score += coin.getPoints() * multiplier;
         coinsEaten++;
+        coinsThisLevel++;
         listeners.forEach(listener -> listener.onCoinEaten(eaten));
+        if (!getLevel().isEndless() && coinsThisLevel >= getLevel().coinsToClear()) {
+            completeLevel();
+            return;
+        }
         Optional<Position> cell = freeCells.find(this::isOccupied);
         if (cell.isEmpty()) {
             coin = null;
             state = GameState.WON;
             listeners.forEach(listener -> listener.onGameOver(true));
         } else {
-            coin = coinFactory.create(cell.get(), obstacles.count() > 0);
+            coin = coinFactory.create(cell.get(), obstacles.spawnedCount() > 0);
+        }
+    }
+
+    private void completeLevel() {
+        coin = null;
+        if (hasNextLevel()) {
+            state = GameState.LEVEL_COMPLETE;
+            Level cleared = getLevel();
+            listeners.forEach(listener -> listener.onLevelComplete(cleared));
+        } else {
+            state = GameState.WON;
+            listeners.forEach(listener -> listener.onGameOver(true));
         }
     }
 
@@ -310,11 +393,11 @@ public class GameModel {
     }
 
     /**
-     * @return current snake speed in moves per second: the difficulty's speed, adjusted by
-     *         any active Slow or Speed effect
+     * @return current snake speed in moves per second: the difficulty's speed, times the
+     *         level's speed multiplier, adjusted by any active Slow or Speed effect
      */
     public double getSpeed() {
-        double speed = settings.difficulty().getSpeed();
+        double speed = settings.difficulty().getSpeed() * getLevel().speedMultiplier();
         if (effects.isActive(Effect.SLOW)) {
             speed *= SLOW_FACTOR;
         }
@@ -322,6 +405,26 @@ public class GameModel {
             speed *= SPEED_BOOST_FACTOR;
         }
         return speed;
+    }
+
+    /** @return the level being played */
+    public Level getLevel() {
+        return levels.get(levelIndex);
+    }
+
+    /** @return the number of levels in this game */
+    public int getLevelCount() {
+        return levels.size();
+    }
+
+    /** @return true if another level follows the current one */
+    public boolean hasNextLevel() {
+        return levelIndex < levels.size() - 1;
+    }
+
+    /** @return coins eaten on the current level */
+    public int getCoinsThisLevel() {
+        return coinsThisLevel;
     }
 
     /** @return the settings this game was started with */

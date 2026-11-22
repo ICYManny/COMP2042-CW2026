@@ -1,6 +1,7 @@
 package com.comp2042.model;
 
 import com.comp2042.model.coin.Coin;
+import com.comp2042.model.level.Level;
 
 /**
  * Receives notifications when something important happens in a {@link GameModel}
@@ -18,6 +19,14 @@ public interface GameListener {
      * @param coin the coin that was eaten
      */
     default void onCoinEaten(Coin coin) {
+    }
+
+    /**
+     * Called when the coin target of a level is reached and another level follows.
+     *
+     * @param level the level that was just cleared
+     */
+    default void onLevelComplete(Level level) {
     }
 
     /**

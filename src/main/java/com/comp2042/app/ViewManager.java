@@ -5,6 +5,8 @@ import com.comp2042.controller.MainMenuController;
 import com.comp2042.model.Difficulty;
 import com.comp2042.model.GameModel;
 import com.comp2042.model.GameSettings;
+import com.comp2042.model.level.Level;
+import com.comp2042.model.level.LevelLoader;
 import com.comp2042.util.ResourceLoader;
 import com.comp2042.view.GameView;
 import com.comp2042.view.SoundEffects;
@@ -17,6 +19,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Switches the single game window between the main menu and a game.
@@ -33,6 +36,7 @@ public class ViewManager {
     private static final String ICON = "/views/res/SnakeLogoWhite.png";
 
     private final Stage stage;
+    private final List<Level> levels = LevelLoader.loadDefaultLevels();
     private GameSettings lastSettings = new GameSettings(20, 20, true, Difficulty.MEDIUM);
 
     /**
@@ -72,7 +76,7 @@ public class ViewManager {
      */
     public void showGame(GameSettings settings) {
         lastSettings = settings;
-        GameModel model = new GameModel(settings);
+        GameModel model = new GameModel(settings, levels);
         GameView view = new GameView(model);
         model.addListener(new SoundEffects());
         GameController controller = new GameController(model, view, stage, this::showMainMenu);
@@ -81,6 +85,11 @@ public class ViewManager {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, controller::handle);
         stage.setScene(scene);
         stage.sizeToScene();
+    }
+
+    /** @return the levels bundled with the game, in order */
+    public List<Level> getLevels() {
+        return levels;
     }
 
     /** @return the settings of the most recent game, so the menu can show the same choices again */

@@ -8,8 +8,9 @@ package com.comp2042.model;
  * @param height          grid height in cells
  * @param powerUpsEnabled whether special coins can appear
  * @param difficulty      speed and wall behaviour
+ * @param startLevel      number of the level to start on, from 1
  */
-public record GameSettings(int width, int height, boolean powerUpsEnabled, Difficulty difficulty) {
+public record GameSettings(int width, int height, boolean powerUpsEnabled, Difficulty difficulty, int startLevel) {
 
     /**
      * Validates the settings.
@@ -23,5 +24,20 @@ public record GameSettings(int width, int height, boolean powerUpsEnabled, Diffi
         if (difficulty == null) {
             throw new IllegalArgumentException("Difficulty must not be null");
         }
+        if (startLevel < 1) {
+            throw new IllegalArgumentException("Start level must be at least 1, was " + startLevel);
+        }
+    }
+
+    /**
+     * Settings that start on the first level.
+     *
+     * @param width           grid width in cells
+     * @param height          grid height in cells
+     * @param powerUpsEnabled whether special coins can appear
+     * @param difficulty      speed and wall behaviour
+     */
+    public GameSettings(int width, int height, boolean powerUpsEnabled, Difficulty difficulty) {
+        this(width, height, powerUpsEnabled, difficulty, 1);
     }
 }

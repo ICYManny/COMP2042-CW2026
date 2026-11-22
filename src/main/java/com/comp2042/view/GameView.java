@@ -8,6 +8,7 @@ import com.comp2042.model.Position;
 import com.comp2042.model.Snake;
 import com.comp2042.model.WallMode;
 import com.comp2042.model.coin.Coin;
+import com.comp2042.model.level.Level;
 import com.comp2042.util.ResourceLoader;
 
 import javafx.geometry.Pos;
@@ -35,6 +36,10 @@ public class GameView {
 
     private static final Color BACKGROUND_COLOR = Color.web("feffe4");
     private static final Color OBSTACLE_COLOR = Color.BLACK;
+    private static final Color LEVEL_WALL_COLOR = Color.web("6d4c41");
+    private static final Color LEVEL_WALL_HIGHLIGHT = Color.web("8d6e63");
+    /** Inset of the lighter centre of a level wall block, as a fraction of a cell. */
+    private static final double WALL_BEVEL = 0.18;
     private static final Color WALL_COLOR = Color.web("8b1e1e");
     /** Thickness of a solid wall as a fraction of a cell. */
     private static final double WALL_THICKNESS = 0.15;
@@ -71,6 +76,7 @@ public class GameView {
     private final OverlayPane overlay = new OverlayPane();
     private GameState shownState;
     private int shownScore = -1;
+    private int shownLevel = -1;
 
     /**
      * Builds the game screen for a model.
@@ -138,7 +144,7 @@ public class GameView {
         drawObstacles();
         drawWalls();
 
-        scoreLabel.setText("Score: " + model.getScore());
+        scoreLabel.setText(describeProgress());
         effectsLabel.setText(describeEffects());
         updateOverlay();
     }
@@ -155,24 +161,37 @@ public class GameView {
         return text.toString();
     }
 
-    /** Updates the overlay only when the state or score changed, not on every frame. */
+    /** @return e.g. "Level 2/5   Score: 45   Coins: 3/10", or just the score in an endless game */
+    private String describeProgress() {
+        Level level = model.getLevel();
+        if (level.isEndless()) {
+            return "Score: " + model.getScore();
+        }
+        return "Level " + level.number() + "/" + model.getLevelCount() + "   Score: " + model.getScore()
+                + "   Coins: " + model.getCoinsThisLevel() + "/" + level.coinsToClear();
+    }
+
+    /** Updates the overlay only when the state, score or level changed, not on every frame. */
     private void updateOverlay() {
-        if (model.getState() != shownState || model.getScore() != shownScore) {
+        if (model.getState() != shownState || model.getScore() != shownScore
+                || model.getLevel().number() != shownLevel) {
             shownState = model.getState();
             shownScore = model.getScore();
-            overlay.show(shownState, shownScore);
+            shownLevel = model.getLevel().number();
+            overlay.show(model);
         }
     }
 
     /**
      * Sets what the overlay buttons do.
      *
-     * @param onRetry  starts a new game
-     * @param onResume resumes a paused game
-     * @param onMenu   returns to the main menu
+     * @param onRetry     starts a new game
+     * @param onResume    resumes a paused game
+     * @param onNextLevel starts the next level
+     * @param onMenu      returns to the main menu
      */
-    public void setOverlayActions(Runnable onRetry, Runnable onResume, Runnable onMenu) {
-        overlay.setActions(onRetry, onResume, onMenu);
+    public void setOverlayActions(Runnable onRetry, Runnable onResume, Runnable onNextLevel, Runnable onMenu) {
+        overlay.setActions(onRetry, onResume, onNextLevel, onMenu);
     }
 
     private void drawCoin(Coin coin) {
@@ -204,9 +223,17 @@ public class GameView {
         }
     }
 
+    /** Level walls are drawn as brown blocks, obstacles spawned by the silver coin as black squares. */
     private void drawObstacles() {
+        double inset = cellSize * WALL_BEVEL;
+        for (Position p : model.getObstacles().getWalls()) {
+            gc.setFill(LEVEL_WALL_COLOR);
+            gc.fillRect(p.x() * cellSize, p.y() * cellSize, cellSize, cellSize);
+            gc.setFill(LEVEL_WALL_HIGHLIGHT);
+            gc.fillRect(p.x() * cellSize + inset, p.y() * cellSize + inset, cellSize - 2 * inset, cellSize - 2 * inset);
+        }
         gc.setFill(OBSTACLE_COLOR);
-        for (Position p : model.getObstacles().getPositions()) {
+        for (Position p : model.getObstacles().getSpawned()) {
             gc.fillRect(p.x() * cellSize, p.y() * cellSize, cellSize, cellSize);
         }
     }

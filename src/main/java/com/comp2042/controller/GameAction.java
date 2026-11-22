@@ -13,5 +13,7 @@ public enum GameAction {
     /** Leave fullscreen. */
     FULLSCREEN_OFF,
     /** Return to the main menu. */
-    MENU
+    MENU,
+    /** Move on from the current screen: next level, resume, or retry after game over. */
+    CONTINUE
 }

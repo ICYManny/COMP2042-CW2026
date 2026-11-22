@@ -36,6 +36,7 @@ class KeyBindingsTest {
         assertEquals(Optional.of(GameAction.MENU), bindings.actionFor(KeyCode.ESCAPE));
         assertEquals(Optional.of(GameAction.FULLSCREEN_ON), bindings.actionFor(KeyCode.EQUALS));
         assertEquals(Optional.of(GameAction.FULLSCREEN_OFF), bindings.actionFor(KeyCode.MINUS));
+        assertEquals(Optional.of(GameAction.CONTINUE), bindings.actionFor(KeyCode.ENTER));
     }
 
     @Test

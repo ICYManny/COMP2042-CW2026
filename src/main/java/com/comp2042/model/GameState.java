@@ -5,7 +5,8 @@ package com.comp2042.model;
  * <pre>
  * READY --start--> PLAYING --pause--> PAUSED --start--> PLAYING
  *                  PLAYING --crash--> GAME_OVER
- *                  PLAYING --board full--> WON
+ *                  PLAYING --level target reached--> LEVEL_COMPLETE --next level--> READY
+ *                  PLAYING --last level cleared, or board full--> WON
  * any state --reset--> READY
  * </pre>
  * Keeping the state in one enum replaces separate flags (dead, a won check, the
@@ -18,9 +19,11 @@ public enum GameState {
     PLAYING,
     /** Frozen until the player resumes. */
     PAUSED,
+    /** The coin target for the current level was reached; waiting to start the next level. */
+    LEVEL_COMPLETE,
     /** The snake crashed. */
     GAME_OVER,
-    /** The player filled the board. */
+    /** The player cleared the last level, or filled the board. */
     WON;
 
     /** @return true if the game has finished, won or lost */
