@@ -79,3 +79,8 @@
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 20;
 }
+#effectsLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 14;
+    -fx-text-fill: #4a148c;
+}
