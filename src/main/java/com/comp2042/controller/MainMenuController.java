@@ -3,6 +3,7 @@ package com.comp2042.controller;
 import com.comp2042.app.ViewManager;
 import com.comp2042.model.Difficulty;
 import com.comp2042.model.GameSettings;
+import com.comp2042.model.level.Level;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -30,6 +31,9 @@ public class MainMenuController {
     @FXML
     private CheckBox powerUpsCheck;
 
+    @FXML
+    private ChoiceBox<Level> levelChoice;
+
     /**
      * @param viewManager used to switch to the game screen and to recall the last choices
      */
@@ -45,6 +49,9 @@ public class MainMenuController {
         difficultyChoice.setValue(viewManager.getLastSettings().difficulty());
         showDescription(difficultyChoice.getValue());
         powerUpsCheck.setSelected(viewManager.getLastSettings().powerUpsEnabled());
+        levelChoice.getItems().setAll(viewManager.getLevels());
+        int lastLevel = Math.min(viewManager.getLastSettings().startLevel(), viewManager.getLevels().size());
+        levelChoice.setValue(viewManager.getLevels().get(lastLevel - 1));
     }
 
     private void showDescription(Difficulty difficulty) {
@@ -55,7 +62,7 @@ public class MainMenuController {
     @FXML
     private void handleStart() {
         viewManager.showGame(new GameSettings(GRID_WIDTH, GRID_HEIGHT, powerUpsCheck.isSelected(),
-                difficultyChoice.getValue()));
+                difficultyChoice.getValue(), levelChoice.getValue().number()));
     }
 
     /** Closes the game. Called by the Quit button. */
