@@ -1,6 +1,7 @@
 package com.comp2042.model.coin;
 
 import com.comp2042.model.Difficulty;
+import com.comp2042.model.Effect;
 import com.comp2042.model.GameModel;
 import com.comp2042.model.GameSettings;
 import com.comp2042.model.Position;
@@ -8,13 +9,19 @@ import com.comp2042.model.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CoinEffectTest {
 
+    private static final Position CELL = new Position(0, 0);
     private GameModel game;
 
     @BeforeEach
@@ -24,43 +31,68 @@ class CoinEffectTest {
 
     @Test
     void pointValues() {
-        Position p = new Position(0, 0);
-        assertEquals(5, new BasicCoin(p).getPoints());
-        assertEquals(15, new GoldCoin(p).getPoints());
-        assertEquals(5, new BlueCoin(p).getPoints());
-        assertEquals(5, new RainbowCoin(p).getPoints());
-        assertEquals(5, new SilverCoin(p).getPoints());
+        assertEquals(5, new BasicCoin(CELL).getPoints());
+        assertEquals(15, new GoldCoin(CELL).getPoints());
+        assertEquals(5, new GhostCoin(CELL).getPoints());
+        assertEquals(5, new SlowCoin(CELL).getPoints());
+        assertEquals(5, new ShrinkCoin(CELL).getPoints());
+        assertEquals(5, new DoublePointsCoin(CELL).getPoints());
+    }
+
+    @Test
+    void basicAndGoldCoinsHaveNoEffect() {
+        new BasicCoin(CELL).applyEffect(game);
+        new GoldCoin(CELL).applyEffect(game);
+        assertTrue(game.getActiveEffects().isEmpty());
+    }
+
+    @Test
+    void slowCoinStartsSlow() {
+        new SlowCoin(CELL).applyEffect(game);
+        assertTrue(game.isEffectActive(Effect.SLOW));
+        assertTrue(game.getSpeed() < Difficulty.HARD.getSpeed());
+    }
+
+    @Test
+    void ghostCoinStartsGhost() {
+        new GhostCoin(CELL).applyEffect(game);
+        assertTrue(game.isEffectActive(Effect.GHOST));
+    }
+
+    @Test
+    void doublePointsCoinStartsDoublePoints() {
+        new DoublePointsCoin(CELL).applyEffect(game);
+        assertTrue(game.isEffectActive(Effect.DOUBLE_POINTS));
     }
 
     @Test
     void rainbowCoinSpeedsTheSnakeUp() {
-        double before = game.getSpeed();
-        new RainbowCoin(new Position(0, 0)).applyEffect(game);
-        assertEquals(before + 5, game.getSpeed(), 1e-9);
+        new RainbowCoin(CELL).applyEffect(game);
+        assertTrue(game.isEffectActive(Effect.SPEED_BOOST));
+        assertTrue(game.getSpeed() > Difficulty.HARD.getSpeed());
     }
 
     @Test
-    void silverCoinAddsObstacles() {
-        new SilverCoin(new Position(0, 0)).applyEffect(game);
+    void silverCoinAddsObstaclesAwayFromTheHead() {
+        new SilverCoin(CELL).applyEffect(game);
         assertTrue(game.getObstacles().count() >= 3);
         game.getObstacles().getPositions()
                 .forEach(p -> assertTrue(game.getSnake().getHead().distanceTo(p) >= 3));
     }
 
     @Test
-    void blueCoinLetsTheSnakeWrapOnSolidWalls() {
-        new BlueCoin(new Position(0, 0)).applyEffect(game);
-        for (int i = 0; i < 11; i++) {
-            game.tick();
-        }
-        assertEquals(false, game.isDead());
+    void shrinkCoinNeverMakesTheSnakeTooShort() {
+        new ShrinkCoin(CELL).applyEffect(game);
+        assertEquals(2, game.getSnake().length());
+        assertFalse(game.isOver());
     }
 
     @Test
     void spriteKeysAreDistinct() {
-        Position p = new Position(0, 0);
-        assertEquals(5, java.util.Set.of(new BasicCoin(p).getSpriteKey(), new GoldCoin(p).getSpriteKey(),
-                new BlueCoin(p).getSpriteKey(), new RainbowCoin(p).getSpriteKey(),
-                new SilverCoin(p).getSpriteKey()).size());
+        Set<String> keys = Stream.of(new BasicCoin(CELL), new GoldCoin(CELL), new GhostCoin(CELL),
+                        new RainbowCoin(CELL), new SilverCoin(CELL), new SlowCoin(CELL), new ShrinkCoin(CELL),
+                        new DoublePointsCoin(CELL))
+                .map(Coin::getSpriteKey).collect(Collectors.toSet());
+        assertEquals(8, keys.size());
     }
 }
