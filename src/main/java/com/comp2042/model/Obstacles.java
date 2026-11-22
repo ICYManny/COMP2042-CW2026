@@ -9,15 +9,19 @@ import java.util.function.Predicate;
 /**
  * The blocks on the board that kill the snake on contact.
  * <p>
- * Renamed from {@code Obstacle} because one instance holds every obstacle on the board.
- * Positions are kept in a set, so the same cell can never be added twice.
+ * There are two kinds: fixed walls that belong to the level layout, and spawned obstacles
+ * added during play (by the silver coin). They are stored separately so restarting a
+ * level can remove the spawned ones while keeping the walls, and so the spawn limit only
+ * counts spawned obstacles. Renamed from {@code Obstacle} because one instance holds every
+ * obstacle on the board.
  */
 public class Obstacles {
 
-    /** Upper limit so random obstacles can never fill the board. */
+    /** Upper limit so spawned obstacles can never fill the board. */
     public static final int MAX_OBSTACLES = 50;
 
-    private final Set<Position> positions = new LinkedHashSet<>();
+    private final Set<Position> walls = new LinkedHashSet<>();
+    private final Set<Position> spawned = new LinkedHashSet<>();
 
     /**
      * Adds obstacles on random free cells, stopping early if the limit is reached or no
@@ -30,46 +34,74 @@ public class Obstacles {
      */
     public int spawn(int amount, FreeCellFinder freeCells, Predicate<Position> forbidden) {
         int added = 0;
-        while (added < amount && positions.size() < MAX_OBSTACLES) {
-            Optional<Position> cell = freeCells.find(forbidden.or(positions::contains));
+        while (added < amount && spawned.size() < MAX_OBSTACLES) {
+            Optional<Position> cell = freeCells.find(forbidden.or(this::contains));
             if (cell.isEmpty()) {
                 break;
             }
-            positions.add(cell.get());
+            spawned.add(cell.get());
             added++;
         }
         return added;
     }
 
     /**
-     * Places an obstacle on a specific cell.
+     * Places a spawned obstacle on a specific cell.
      *
      * @param cell where to put the obstacle
      */
     public void add(Position cell) {
-        positions.add(cell);
+        spawned.add(cell);
+    }
+
+    /**
+     * Replaces the level's fixed walls.
+     *
+     * @param layout the wall cells of the level
+     */
+    public void setWalls(Set<Position> layout) {
+        walls.clear();
+        walls.addAll(layout);
     }
 
     /**
      * @param cell a grid cell
-     * @return true if an obstacle is on that cell
+     * @return true if a wall or spawned obstacle is on that cell
      */
     public boolean contains(Position cell) {
-        return positions.contains(cell);
+        return walls.contains(cell) || spawned.contains(cell);
     }
 
-    /** @return a read-only view of every obstacle position */
+    /** @return a read-only view of the level's fixed walls */
+    public Set<Position> getWalls() {
+        return Collections.unmodifiableSet(walls);
+    }
+
+    /** @return a read-only view of the obstacles spawned during play */
+    public Set<Position> getSpawned() {
+        return Collections.unmodifiableSet(spawned);
+    }
+
+    /** @return a read-only set of every blocked cell, walls and spawned obstacles together */
     public Set<Position> getPositions() {
-        return Collections.unmodifiableSet(positions);
+        Set<Position> all = new LinkedHashSet<>(walls);
+        all.addAll(spawned);
+        return Collections.unmodifiableSet(all);
     }
 
-    /** @return number of obstacles on the board */
+    /** @return total number of blocked cells */
     public int count() {
-        return positions.size();
+        return walls.size() + spawned.size();
     }
 
-    /** Removes every obstacle. */
+    /** @return number of obstacles spawned during play */
+    public int spawnedCount() {
+        return spawned.size();
+    }
+
+    /** Removes every wall and spawned obstacle. */
     public void clear() {
-        positions.clear();
+        walls.clear();
+        spawned.clear();
     }
 }

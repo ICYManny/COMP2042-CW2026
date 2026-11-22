@@ -59,6 +59,22 @@ class ObstaclesTest {
     }
 
     @Test
+    void wallsBlockCellsButDoNotCountTowardsTheSpawnLimit() {
+        java.util.Set<Position> layout = new java.util.HashSet<>();
+        for (int x = 0; x < 20; x++) {
+            for (int y = 0; y < 4; y++) {
+                layout.add(new Position(x, y));
+            }
+        }
+        obstacles.setWalls(layout);
+        assertTrue(obstacles.contains(new Position(5, 2)));
+        obstacles.spawn(500, finder, cell -> false);
+        assertEquals(Obstacles.MAX_OBSTACLES, obstacles.spawnedCount());
+        assertEquals(80 + Obstacles.MAX_OBSTACLES, obstacles.count());
+        obstacles.getSpawned().forEach(p -> assertFalse(layout.contains(p)));
+    }
+
+    @Test
     void clearRemovesEverything() {
         obstacles.add(new Position(4, 4));
         obstacles.clear();
