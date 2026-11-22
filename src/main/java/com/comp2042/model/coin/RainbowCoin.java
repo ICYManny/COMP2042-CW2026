@@ -1,15 +1,15 @@
 package com.comp2042.model.coin;
 
+import com.comp2042.model.Effect;
 import com.comp2042.model.GameModel;
 import com.comp2042.model.Position;
 
 /**
- * Speeds the snake up until the next coin is eaten.
+ * Hazard: speeds the snake up by half for a few seconds.
  */
 public class RainbowCoin extends Coin {
 
     private static final int POINTS = 5;
-    private static final double SPEED_BONUS = 5;
 
     public RainbowCoin(Position position) {
         super(position);
@@ -27,6 +27,6 @@ public class RainbowCoin extends Coin {
 
     @Override
     public void applyEffect(GameModel game) {
-        game.boostSpeed(SPEED_BONUS);
+        game.activateEffect(Effect.SPEED_BOOST);
     }
 }

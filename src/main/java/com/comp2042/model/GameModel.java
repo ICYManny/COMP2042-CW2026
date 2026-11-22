@@ -6,6 +6,7 @@ import com.comp2042.model.coin.CoinFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
@@ -27,6 +28,9 @@ public class GameModel {
     private static final int MIN_NEW_OBSTACLES = 3;
     /** Longest frame gap simulated at once, so a stall (e.g. dragging the window) cannot teleport the snake. */
     private static final double MAX_FRAME_TIME = 0.25;
+    private static final double SLOW_FACTOR = 0.6;
+    private static final double SPEED_BOOST_FACTOR = 1.5;
+    private static final int DOUBLE_POINTS_FACTOR = 2;
 
     private final GameSettings settings;
     private final Random random;
@@ -38,9 +42,8 @@ public class GameModel {
     private Coin coin;
     private int score;
     private int coinsEaten;
-    private double speed;
+    private final ActiveEffects effects = new ActiveEffects();
     private double timeSinceStep;
-    private boolean ignoreBorders;
     private GameState state;
 
     /**
@@ -83,9 +86,8 @@ public class GameModel {
         score = 0;
         coinsEaten = 0;
         coin = new BasicCoin(freeCells.find(this::isOccupied).orElseThrow());
-        speed = settings.difficulty().getSpeed();
+        effects.clear();
         timeSinceStep = 0;
-        ignoreBorders = false;
         state = GameState.READY;
     }
 
@@ -129,9 +131,11 @@ public class GameModel {
         if (state != GameState.PLAYING || elapsedSeconds <= 0) {
             return;
         }
-        timeSinceStep += Math.min(elapsedSeconds, MAX_FRAME_TIME);
-        while (state == GameState.PLAYING && timeSinceStep >= 1.0 / speed) {
-            timeSinceStep -= 1.0 / speed;
+        double elapsed = Math.min(elapsedSeconds, MAX_FRAME_TIME);
+        effects.update(elapsed);
+        timeSinceStep += elapsed;
+        while (state == GameState.PLAYING && timeSinceStep >= 1.0 / getSpeed()) {
+            timeSinceStep -= 1.0 / getSpeed();
             tick();
         }
     }
@@ -146,7 +150,7 @@ public class GameModel {
         if (isOver()) {
             return 1;
         }
-        return Math.min(1, timeSinceStep * speed);
+        return Math.min(1, timeSinceStep * getSpeed());
     }
 
     /** Moves the snake one cell and applies the consequences. Does nothing once the game is over. */
@@ -161,7 +165,8 @@ public class GameModel {
         }
         Position next = landing.get();
         boolean eating = coin != null && next.equals(coin.getPosition());
-        if (obstacles.contains(next) || snake.collidesWithBody(next, eating)) {
+        boolean hitsObstacle = obstacles.contains(next) && !effects.isActive(Effect.GHOST);
+        if (hitsObstacle || snake.collidesWithBody(next, eating)) {
             die();
             return;
         }
@@ -178,10 +183,9 @@ public class GameModel {
 
     private void eatCoin() {
         Coin eaten = coin;
-        speed = settings.difficulty().getSpeed();
-        ignoreBorders = false;
         coin.applyEffect(this);
-        score += coin.getPoints();
+        int multiplier = effects.isActive(Effect.DOUBLE_POINTS) ? DOUBLE_POINTS_FACTOR : 1;
+        score += coin.getPoints() * multiplier;
         coinsEaten++;
         listeners.forEach(listener -> listener.onCoinEaten(eaten));
         Optional<Position> cell = freeCells.find(this::isOccupied);
@@ -213,22 +217,34 @@ public class GameModel {
     }
 
     /**
-     * Makes the snake faster until the next coin is eaten. Used by coin effects.
+     * Starts a timed effect, or restarts it if already active. Used by coin effects.
      *
-     * @param bonus extra moves per second
+     * @param effect the effect to start
      */
-    public void boostSpeed(double bonus) {
-        speed += bonus;
+    public void activateEffect(Effect effect) {
+        effects.activate(effect);
     }
 
     /**
-     * Lets the snake wrap through the outer walls until the next coin is eaten.
-     * Used by coin effects.
+     * Makes the snake shorter without changing the score. Used by coin effects.
      *
-     * @param ignore true to let the snake pass through walls
+     * @param amount number of tail segments to remove
      */
-    public void setIgnoreBorders(boolean ignore) {
-        ignoreBorders = ignore;
+    public void shrinkSnake(int amount) {
+        snake.shrink(amount);
+    }
+
+    /**
+     * @param effect an effect
+     * @return true if the effect is currently active
+     */
+    public boolean isEffectActive(Effect effect) {
+        return effects.isActive(effect);
+    }
+
+    /** @return every active effect and its remaining seconds, read-only */
+    public Map<Effect, Double> getActiveEffects() {
+        return effects.getAll();
     }
 
     /** Adds a random batch of obstacles to the board. Used by coin effects. */
@@ -245,7 +261,7 @@ public class GameModel {
      *         side while a wall-passing effect is active
      */
     public WallMode getWallMode() {
-        return ignoreBorders ? WallMode.WRAP_ALL : settings.difficulty().getWallMode();
+        return effects.isActive(Effect.GHOST) ? WallMode.WRAP_ALL : settings.difficulty().getWallMode();
     }
 
     /** @return the current stage of the game */
@@ -293,8 +309,18 @@ public class GameModel {
         return score;
     }
 
-    /** @return current snake speed in moves per second */
+    /**
+     * @return current snake speed in moves per second: the difficulty's speed, adjusted by
+     *         any active Slow or Speed effect
+     */
     public double getSpeed() {
+        double speed = settings.difficulty().getSpeed();
+        if (effects.isActive(Effect.SLOW)) {
+            speed *= SLOW_FACTOR;
+        }
+        if (effects.isActive(Effect.SPEED_BOOST)) {
+            speed *= SPEED_BOOST_FACTOR;
+        }
         return speed;
     }
 

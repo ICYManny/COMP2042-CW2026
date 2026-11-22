@@ -6,6 +6,7 @@ import com.comp2042.model.GameSettings;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 
@@ -17,7 +18,6 @@ public class MainMenuController {
 
     private static final int GRID_WIDTH = 20;
     private static final int GRID_HEIGHT = 20;
-    private static final boolean POWER_UPS = true;
 
     private final ViewManager viewManager;
 
@@ -26,6 +26,9 @@ public class MainMenuController {
 
     @FXML
     private Label difficultyInfo;
+
+    @FXML
+    private CheckBox powerUpsCheck;
 
     /**
      * @param viewManager used to switch to the game screen and to recall the last choices
@@ -41,6 +44,7 @@ public class MainMenuController {
         difficultyChoice.valueProperty().addListener((observable, oldValue, newValue) -> showDescription(newValue));
         difficultyChoice.setValue(viewManager.getLastSettings().difficulty());
         showDescription(difficultyChoice.getValue());
+        powerUpsCheck.setSelected(viewManager.getLastSettings().powerUpsEnabled());
     }
 
     private void showDescription(Difficulty difficulty) {
@@ -50,7 +54,8 @@ public class MainMenuController {
     /** Starts a game with the chosen options. Called by the Start button. */
     @FXML
     private void handleStart() {
-        viewManager.showGame(new GameSettings(GRID_WIDTH, GRID_HEIGHT, POWER_UPS, difficultyChoice.getValue()));
+        viewManager.showGame(new GameSettings(GRID_WIDTH, GRID_HEIGHT, powerUpsCheck.isSelected(),
+                difficultyChoice.getValue()));
     }
 
     /** Closes the game. Called by the Quit button. */

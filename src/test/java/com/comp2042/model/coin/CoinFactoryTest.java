@@ -33,7 +33,8 @@ class CoinFactoryTest {
         for (int i = 0; i < 2000; i++) {
             seen.add(factory.create(CELL, false).getClass());
         }
-        assertEquals(Set.of(BasicCoin.class, GoldCoin.class, RainbowCoin.class, BlueCoin.class, SilverCoin.class), seen);
+        assertEquals(Set.of(BasicCoin.class, GoldCoin.class, RainbowCoin.class, GhostCoin.class, SilverCoin.class,
+                SlowCoin.class, ShrinkCoin.class, DoublePointsCoin.class), seen);
     }
 
     @Test
@@ -42,6 +43,26 @@ class CoinFactoryTest {
         for (int i = 0; i < 2000; i++) {
             assertFalse(factory.create(CELL, true) instanceof SilverCoin);
         }
+    }
+
+    @Test
+    void weightBelowOneIsRejected() {
+        CoinFactory factory = new CoinFactory(new Random(1), true);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> factory.register(0, false, BasicCoin::new));
+    }
+
+    @Test
+    void registeredCoinTypesCanAppear() {
+        CoinFactory factory = new CoinFactory(new Random(1), true);
+        factory.register(1000, false, GoldCoin::new);
+        int gold = 0;
+        for (int i = 0; i < 200; i++) {
+            if (factory.create(CELL, false) instanceof GoldCoin) {
+                gold++;
+            }
+        }
+        assertTrue(gold > 150, "a heavily weighted coin should dominate, got " + gold);
     }
 
     @Test

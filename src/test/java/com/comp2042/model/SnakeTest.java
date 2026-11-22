@@ -129,6 +129,20 @@ class SnakeTest {
     }
 
     @Test
+    void shrinkRemovesTailSegments() {
+        snake.moveTo(snake.nextHead(), true);
+        snake.moveTo(snake.nextHead(), true);
+        assertEquals(3, snake.shrink(3));
+        assertEquals(2, snake.length());
+    }
+
+    @Test
+    void shrinkNeverGoesBelowMinimumLength() {
+        assertEquals(1, snake.shrink(10));
+        assertEquals(Snake.MIN_LENGTH, snake.length());
+    }
+
+    @Test
     void getSegmentsReturnsACopy() {
         snake.getSegments().clear();
         assertEquals(3, snake.length());

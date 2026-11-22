@@ -17,6 +17,8 @@ public class Snake {
 
     /** How many turns can be typed ahead of the snake's movement. */
     public static final int MAX_QUEUED_TURNS = 2;
+    /** The snake can never be shorter than this. */
+    public static final int MIN_LENGTH = 2;
 
     private final Deque<Position> segments = new ArrayDeque<>();
     private final Deque<Direction> queuedTurns = new ArrayDeque<>();
@@ -91,6 +93,22 @@ public class Snake {
             segments.removeLast();
         }
         previousTail = grow ? getTail() : oldTail;
+    }
+
+    /**
+     * Removes segments from the tail, never leaving fewer than {@value #MIN_LENGTH}.
+     *
+     * @param amount number of segments to remove
+     * @return number of segments actually removed
+     */
+    public int shrink(int amount) {
+        int removed = 0;
+        while (removed < amount && segments.size() > MIN_LENGTH) {
+            segments.removeLast();
+            removed++;
+        }
+        previousTail = getTail();
+        return removed;
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.comp2042.view;
 
 import com.comp2042.model.Direction;
+import com.comp2042.model.Effect;
 import com.comp2042.model.GameModel;
 import com.comp2042.model.GameState;
 import com.comp2042.model.Position;
@@ -23,6 +24,7 @@ import javafx.stage.Screen;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Draws a {@link GameModel} onto a canvas, with the score and end-of-game labels on top.
@@ -54,6 +56,7 @@ public class GameView {
     private static final double BODY_STRIPE_WIDTH = 0.08;
     /** Points further apart than this (in cells) are on opposite sides of a wrapped border. */
     private static final double MAX_JOINT_GAP = 1.01;
+    private static final double GHOST_ALPHA = 0.45;
 
     private final GameModel model;
     private final SpriteManager sprites = new SpriteManager();
@@ -64,6 +67,7 @@ public class GameView {
     private final Canvas canvas;
     private final GraphicsContext gc;
     private final Label scoreLabel = new Label();
+    private final Label effectsLabel = new Label();
     private final OverlayPane overlay = new OverlayPane();
     private GameState shownState;
     private int shownScore = -1;
@@ -83,8 +87,10 @@ public class GameView {
         String css = ResourceLoader.externalForm("/views/styling.css");
         root.getStylesheets().add(css);
         scoreLabel.setId("scoreLabel");
-        root.getChildren().addAll(canvas, scoreLabel, overlay.getNode());
+        effectsLabel.setId("effectsLabel");
+        root.getChildren().addAll(canvas, scoreLabel, effectsLabel, overlay.getNode());
         StackPane.setAlignment(scoreLabel, Pos.BOTTOM_CENTER);
+        StackPane.setAlignment(effectsLabel, Pos.TOP_CENTER);
         StackPane.setAlignment(overlay.getNode(), Pos.CENTER);
         render();
     }
@@ -133,7 +139,20 @@ public class GameView {
         drawWalls();
 
         scoreLabel.setText("Score: " + model.getScore());
+        effectsLabel.setText(describeEffects());
         updateOverlay();
+    }
+
+    /** @return active effects and their remaining whole seconds, e.g. "Ghost 4s   x2 Points 9s" */
+    private String describeEffects() {
+        StringBuilder text = new StringBuilder();
+        for (Map.Entry<Effect, Double> entry : model.getActiveEffects().entrySet()) {
+            if (!text.isEmpty()) {
+                text.append("   ");
+            }
+            text.append(entry.getKey().getDisplayName()).append(' ').append((int) Math.ceil(entry.getValue())).append('s');
+        }
+        return text.toString();
     }
 
     /** Updates the overlay only when the state or score changed, not on every frame. */
@@ -219,10 +238,13 @@ public class GameView {
             path.add(interpolate(tailFrom, tail, progress));
         }
 
+        // a ghost snake is drawn see-through
+        gc.setGlobalAlpha(model.isEffectActive(Effect.GHOST) ? GHOST_ALPHA : 1);
         strokeBody(path, BODY_OUTLINE_WIDTH, BODY_OUTLINE_COLOR);
         strokeBody(path, BODY_WIDTH, BODY_COLOR);
         strokeBody(path, BODY_STRIPE_WIDTH, BODY_STRIPE_COLOR);
         drawRotated(sprites.get(HEAD_SPRITE), headPoint[0], headPoint[1], heading.getAngle());
+        gc.setGlobalAlpha(1);
     }
 
     /**
