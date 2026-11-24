@@ -17,7 +17,9 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeLineJoin;
@@ -48,8 +50,9 @@ public class GameView {
     private static final double LARGE_CELL_SIZE = 20;
     private static final double COIN_MARGIN = 3;
 
-    private static final String LARGE_SCORE_STYLE = "-fx-font-size: 35;";
-    private static final String SMALL_SCORE_STYLE = "-fx-font-size: 15;";
+    /** Height of the status bar under the board, in pixels. */
+    private static final double HUD_HEIGHT = 44;
+    private static final String HUD_STYLE = "-fx-background-color: #2e3b2f;";
 
     private static final String HEAD_SPRITE = "snakehead";
     private static final Color BODY_OUTLINE_COLOR = Color.BLACK;
@@ -68,7 +71,8 @@ public class GameView {
     private final double baseCellSize;
     private double cellSize;
 
-    private final StackPane root = new StackPane();
+    private final BorderPane root = new BorderPane();
+    private final StackPane board = new StackPane();
     private final Canvas canvas;
     private final GraphicsContext gc;
     private final Label scoreLabel = new Label();
@@ -94,10 +98,18 @@ public class GameView {
         root.getStylesheets().add(css);
         scoreLabel.setId("scoreLabel");
         effectsLabel.setId("effectsLabel");
-        root.getChildren().addAll(canvas, scoreLabel, effectsLabel, overlay.getNode());
-        StackPane.setAlignment(scoreLabel, Pos.BOTTOM_CENTER);
-        StackPane.setAlignment(effectsLabel, Pos.TOP_CENTER);
+        board.getChildren().addAll(canvas, overlay.getNode());
         StackPane.setAlignment(overlay.getNode(), Pos.CENTER);
+
+        // the status bar sits under the board so text never hides the snake or coins
+        VBox hud = new VBox(2, scoreLabel, effectsLabel);
+        hud.setAlignment(Pos.CENTER);
+        hud.setStyle(HUD_STYLE);
+        hud.setPrefHeight(HUD_HEIGHT);
+        hud.setMinSize(0, HUD_HEIGHT);
+
+        root.setCenter(board);
+        root.setBottom(hud);
         render();
     }
 
@@ -111,8 +123,16 @@ public class GameView {
         return model.getWidth() * baseCellSize;
     }
 
-    /** @return window height needed to show the whole grid */
+    /** @return window height needed to show the whole grid and the status bar */
     public double getPreferredHeight() {
+        return boardHeight() + HUD_HEIGHT;
+    }
+
+    private double boardWidth() {
+        return model.getWidth() * baseCellSize;
+    }
+
+    private double boardHeight() {
         return model.getHeight() * baseCellSize;
     }
 
@@ -124,14 +144,13 @@ public class GameView {
     public void setFullScreen(boolean fullScreen) {
         double scale = 1;
         if (fullScreen) {
-            double xScale = Screen.getPrimary().getVisualBounds().getWidth() / getPreferredWidth();
-            double yScale = Screen.getPrimary().getVisualBounds().getHeight() / getPreferredHeight();
+            double xScale = Screen.getPrimary().getBounds().getWidth() / boardWidth();
+            double yScale = (Screen.getPrimary().getBounds().getHeight() - HUD_HEIGHT) / boardHeight();
             scale = Math.min(xScale, yScale);
         }
         cellSize = baseCellSize * scale;
-        canvas.setWidth(getPreferredWidth() * scale);
-        canvas.setHeight(getPreferredHeight() * scale);
-        scoreLabel.setStyle(fullScreen ? LARGE_SCORE_STYLE : SMALL_SCORE_STYLE);
+        canvas.setWidth(boardWidth() * scale);
+        canvas.setHeight(boardHeight() * scale);
         render();
     }
 

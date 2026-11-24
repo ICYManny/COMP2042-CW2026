@@ -77,10 +77,11 @@
 }
 #scoreLabel {
     -fx-font-family: "SF Pixelate";
-    -fx-font-size: 20;
+    -fx-font-size: 16;
+    -fx-text-fill: #f1f8e9;
 }
 #effectsLabel {
     -fx-font-family: "SF Pixelate";
-    -fx-font-size: 14;
-    -fx-text-fill: #4a148c;
+    -fx-font-size: 13;
+    -fx-text-fill: #ffd54f;
 }
