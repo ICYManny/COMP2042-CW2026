@@ -4,7 +4,9 @@ import com.comp2042.model.Direction;
 import com.comp2042.model.GameModel;
 import com.comp2042.view.GameView;
 
+import javafx.beans.value.ChangeListener;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
@@ -23,6 +25,7 @@ public class GameController {
     private final Runnable exitToMenu;
     private final KeyBindings keyBindings = KeyBindings.defaults();
     private final GameLoop loop;
+    private final ChangeListener<Boolean> fullScreenListener;
 
     /**
      * Creates the controller and starts drawing the game. The snake waits for the first
@@ -39,6 +42,11 @@ public class GameController {
         this.stage = stage;
         this.exitToMenu = exitToMenu;
         view.setOverlayActions(this::reset, model::start, model::nextLevel, this::returnToMenu);
+        // resize the board whenever fullscreen changes, however it was changed
+        fullScreenListener = (observable, wasFullScreen, isFullScreen) -> view.setFullScreen(isFullScreen);
+        stage.fullScreenProperty().addListener(fullScreenListener);
+        stage.setFullScreenExitHint("Press - to leave fullscreen");
+        stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         loop = new GameLoop(this::frame);
         loop.start();
     }
@@ -94,11 +102,11 @@ public class GameController {
 
     private void setFullScreen(boolean fullScreen) {
         stage.setFullScreen(fullScreen);
-        view.setFullScreen(fullScreen);
     }
 
     private void returnToMenu() {
         loop.stop();
+        stage.fullScreenProperty().removeListener(fullScreenListener);
         exitToMenu.run();
     }
 }
