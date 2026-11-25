@@ -27,6 +27,8 @@ public class GameLoop {
     private long lastFrameNanos = -1;
 
     /**
+     * Creates a GameLoop.
+     *
      * @param onFrame called every frame with the seconds elapsed since the previous frame
      */
     public GameLoop(DoubleConsumer onFrame) {

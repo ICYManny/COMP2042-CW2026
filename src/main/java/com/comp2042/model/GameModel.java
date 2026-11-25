@@ -178,7 +178,7 @@ public class GameModel {
         return snake.turn(direction);
     }
 
-    /** @return false once the game has ended or while a completed level is waiting */
+    /** {@return false once the game has ended or while a completed level is waiting} */
     private boolean canMove() {
         return !isOver() && state != GameState.LEVEL_COMPLETE;
     }
@@ -282,6 +282,8 @@ public class GameModel {
     }
 
     /**
+     * Returns true if the snake or an obstacle is on that cell.
+     *
      * @param cell a grid cell
      * @return true if the snake or an obstacle is on that cell
      */
@@ -318,6 +320,8 @@ public class GameModel {
     }
 
     /**
+     * Returns true if the effect is currently active.
+     *
      * @param effect an effect
      * @return true if the effect is currently active
      */
@@ -325,7 +329,7 @@ public class GameModel {
         return effects.isActive(effect);
     }
 
-    /** @return every active effect and its remaining seconds, read-only */
+    /** {@return every active effect and its remaining seconds, read-only} */
     public Map<Effect, Double> getActiveEffects() {
         return effects.getAll();
     }
@@ -340,61 +344,61 @@ public class GameModel {
     }
 
     /**
-     * @return the edge rule currently in force: the difficulty's rule, or wrapping on every
-     *         side while a wall-passing effect is active
+     * {@return the edge rule currently in force: the difficulty's rule, or wrapping on every
+     *         side while a wall-passing effect is active}
      */
     public WallMode getWallMode() {
         return effects.isActive(Effect.GHOST) ? WallMode.WRAP_ALL : settings.difficulty().getWallMode();
     }
 
-    /** @return the current stage of the game */
+    /** {@return the current stage of the game} */
     public GameState getState() {
         return state;
     }
 
-    /** @return true if the player has won or lost */
+    /** {@return true if the player has won or lost} */
     public boolean isOver() {
         return state.isFinished();
     }
 
-    /** @return true if the snake has crashed */
+    /** {@return true if the snake has crashed} */
     public boolean isDead() {
         return state == GameState.GAME_OVER;
     }
 
-    /** @return true if the snake has filled every free cell */
+    /** {@return true if the snake has filled every free cell} */
     public boolean isWon() {
         return state == GameState.WON;
     }
 
-    /** @return number of coins eaten so far */
+    /** {@return number of coins eaten so far} */
     public int getCoinsEaten() {
         return coinsEaten;
     }
 
-    /** @return the snake */
+    /** {@return the snake} */
     public Snake getSnake() {
         return snake;
     }
 
-    /** @return the coin currently on the board, or null once the game is won */
+    /** {@return the coin currently on the board, or null once the game is won} */
     public Coin getCoin() {
         return coin;
     }
 
-    /** @return the obstacles on the board */
+    /** {@return the obstacles on the board} */
     public Obstacles getObstacles() {
         return obstacles;
     }
 
-    /** @return points scored so far */
+    /** {@return points scored so far} */
     public int getScore() {
         return score;
     }
 
     /**
-     * @return current snake speed in moves per second: the difficulty's speed, times the
-     *         level's speed multiplier, adjusted by any active Slow or Speed effect
+     * {@return current snake speed in moves per second: the difficulty's speed, times the
+     *         level's speed multiplier, adjusted by any active Slow or Speed effect}
      */
     public double getSpeed() {
         double speed = settings.difficulty().getSpeed() * getLevel().speedMultiplier();
@@ -407,37 +411,37 @@ public class GameModel {
         return speed;
     }
 
-    /** @return the level being played */
+    /** {@return the level being played} */
     public Level getLevel() {
         return levels.get(levelIndex);
     }
 
-    /** @return the number of levels in this game */
+    /** {@return the number of levels in this game} */
     public int getLevelCount() {
         return levels.size();
     }
 
-    /** @return true if another level follows the current one */
+    /** {@return true if another level follows the current one} */
     public boolean hasNextLevel() {
         return levelIndex < levels.size() - 1;
     }
 
-    /** @return coins eaten on the current level */
+    /** {@return coins eaten on the current level} */
     public int getCoinsThisLevel() {
         return coinsThisLevel;
     }
 
-    /** @return the settings this game was started with */
+    /** {@return the settings this game was started with} */
     public GameSettings getSettings() {
         return settings;
     }
 
-    /** @return grid width in cells */
+    /** {@return grid width in cells} */
     public int getWidth() {
         return settings.width();
     }
 
-    /** @return grid height in cells */
+    /** {@return grid height in cells} */
     public int getHeight() {
         return settings.height();
     }

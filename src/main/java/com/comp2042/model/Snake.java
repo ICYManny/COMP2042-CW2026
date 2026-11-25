@@ -69,7 +69,7 @@ public class Snake {
         return true;
     }
 
-    /** @return the cell the head will enter next (including any queued turn), before wrapping */
+    /** {@return the cell the head will enter next (including any queued turn), before wrapping} */
     public Position nextHead() {
         return getHead().step(nextDirection());
     }
@@ -135,6 +135,8 @@ public class Snake {
     }
 
     /**
+     * Returns true if any segment of the snake is on that cell.
+     *
      * @param cell a grid cell
      * @return true if any segment of the snake is on that cell
      */
@@ -142,22 +144,22 @@ public class Snake {
         return segments.contains(cell);
     }
 
-    /** @return the head position */
+    /** {@return the head position} */
     public Position getHead() {
         return segments.peekFirst();
     }
 
-    /** @return the tail position */
+    /** {@return the tail position} */
     public Position getTail() {
         return segments.peekLast();
     }
 
-    /** @return a copy of all segments, ordered from head to tail */
+    /** {@return a copy of all segments, ordered from head to tail} */
     public List<Position> getSegments() {
         return new ArrayList<>(segments);
     }
 
-    /** @return number of segments including the head */
+    /** {@return number of segments including the head} */
     public int length() {
         return segments.size();
     }
@@ -172,7 +174,7 @@ public class Snake {
         return previousTail;
     }
 
-    /** @return the direction the snake last moved in (queued turns not included) */
+    /** {@return the direction the snake last moved in (queued turns not included)} */
     public Direction getDirection() {
         return direction;
     }

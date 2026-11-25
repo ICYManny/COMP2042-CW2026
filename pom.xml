@@ -76,6 +76,18 @@
                 <version>3.5.2</version>
             </plugin>
 
+            <!-- Generates the API documentation with: mvnw javadoc:javadoc
+                 (output: target/reports/apidocs) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version>
+                <configuration>
+                    <windowtitle>Snake Game (COMP2042)</windowtitle>
+                    <doctitle>Snake Game - COMP2042 Coursework</doctitle>
+                </configuration>
+            </plugin>
+
             <!-- Lets you run the app with: mvn javafx:run -->
             <plugin>
                 <groupId>org.openjfx</groupId>

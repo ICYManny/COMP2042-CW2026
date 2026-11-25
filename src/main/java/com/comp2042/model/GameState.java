@@ -26,7 +26,7 @@ public enum GameState {
     /** The player cleared the last level, or filled the board. */
     WON;
 
-    /** @return true if the game has finished, won or lost */
+    /** {@return true if the game has finished, won or lost} */
     public boolean isFinished() {
         return this == GAME_OVER || this == WON;
     }

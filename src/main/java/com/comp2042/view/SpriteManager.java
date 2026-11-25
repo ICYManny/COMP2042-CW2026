@@ -23,6 +23,12 @@ public class SpriteManager {
     private final Map<String, Image> cache = new HashMap<>();
 
     /**
+     * Creates a sprite manager with an empty cache.
+     */
+    public SpriteManager() {
+    }
+
+    /**
      * Returns the sprite for a key, loading it on first use.
      *
      * @param key file name of the sprite without folder or extension, e.g. "snakehead"

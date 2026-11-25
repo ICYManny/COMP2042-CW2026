@@ -24,22 +24,22 @@ public enum Difficulty {
         this.description = description;
     }
 
-    /** @return snake moves per second */
+    /** {@return snake moves per second} */
     public double getSpeed() {
         return speed;
     }
 
-    /** @return what happens at the edges of the board */
+    /** {@return what happens at the edges of the board} */
     public WallMode getWallMode() {
         return wallMode;
     }
 
-    /** @return a one-line explanation shown in the menu */
+    /** {@return a one-line explanation shown in the menu} */
     public String getDescription() {
         return description;
     }
 
-    /** @return the name shown in the menu */
+    /** {@return the name shown in the menu} */
     @Override
     public String toString() {
         return displayName;

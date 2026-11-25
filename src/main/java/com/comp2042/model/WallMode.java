@@ -42,12 +42,12 @@ public enum WallMode {
         return Optional.of(cell.wrap(width, height));
     }
 
-    /** @return true if the left and right edges wrap */
+    /** {@return true if the left and right edges wrap} */
     public boolean wrapsHorizontally() {
         return wrapsHorizontally;
     }
 
-    /** @return true if the top and bottom edges wrap */
+    /** {@return true if the top and bottom edges wrap} */
     public boolean wrapsVertically() {
         return wrapsVertically;
     }

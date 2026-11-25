@@ -113,17 +113,17 @@ public class GameView {
         render();
     }
 
-    /** @return the node to place in the game scene */
+    /** {@return the node to place in the game scene} */
     public Parent getRoot() {
         return root;
     }
 
-    /** @return window width needed to show the whole grid */
+    /** {@return window width needed to show the whole grid} */
     public double getPreferredWidth() {
         return model.getWidth() * baseCellSize;
     }
 
-    /** @return window height needed to show the whole grid and the status bar */
+    /** {@return window height needed to show the whole grid and the status bar} */
     public double getPreferredHeight() {
         return boardHeight() + HUD_HEIGHT;
     }
@@ -168,7 +168,7 @@ public class GameView {
         updateOverlay();
     }
 
-    /** @return active effects and their remaining whole seconds, e.g. "Ghost 4s   x2 Points 9s" */
+    /** {@return active effects and their remaining whole seconds, e.g. "Ghost 4s   x2 Points 9s"} */
     private String describeEffects() {
         StringBuilder text = new StringBuilder();
         for (Map.Entry<Effect, Double> entry : model.getActiveEffects().entrySet()) {
@@ -180,7 +180,7 @@ public class GameView {
         return text.toString();
     }
 
-    /** @return e.g. "Level 2/5   Score: 45   Coins: 3/10", or just the score in an endless game */
+    /** {@return e.g. "Level 2/5   Score: 45   Coins: 3/10", or just the score in an endless game} */
     private String describeProgress() {
         Level level = model.getLevel();
         if (level.isEndless()) {

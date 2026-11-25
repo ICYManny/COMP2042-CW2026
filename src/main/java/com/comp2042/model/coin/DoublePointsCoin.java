@@ -11,6 +11,11 @@ public class DoublePointsCoin extends Coin {
 
     private static final int POINTS = 5;
 
+    /**
+     * Creates a DoublePointsCoin on the given cell.
+     *
+     * @param position the cell the coin is placed on
+     */
     public DoublePointsCoin(Position position) {
         super(position);
     }

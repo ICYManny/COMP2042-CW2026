@@ -8,9 +8,13 @@ package com.comp2042.model;
  * and the scattered rotation numbers used before.
  */
 public enum Direction {
+    /** Towards the top of the screen. */
     UP(0, -1, 0),
+    /** Towards the right of the screen. */
     RIGHT(1, 0, 90),
+    /** Towards the bottom of the screen. */
     DOWN(0, 1, 180),
+    /** Towards the left of the screen. */
     LEFT(-1, 0, 270);
 
     private final int dx;
@@ -23,22 +27,22 @@ public enum Direction {
         this.angle = angle;
     }
 
-    /** @return the change in x when moving one cell in this direction */
+    /** {@return the change in x when moving one cell in this direction} */
     public int getDx() {
         return dx;
     }
 
-    /** @return the change in y when moving one cell in this direction */
+    /** {@return the change in y when moving one cell in this direction} */
     public int getDy() {
         return dy;
     }
 
-    /** @return the sprite rotation in degrees for this direction */
+    /** {@return the sprite rotation in degrees for this direction} */
     public int getAngle() {
         return angle;
     }
 
-    /** @return the direction pointing the opposite way */
+    /** {@return the direction pointing the opposite way} */
     public Direction opposite() {
         return switch (this) {
             case UP -> DOWN;
@@ -49,6 +53,8 @@ public enum Direction {
     }
 
     /**
+     * Returns true if {@code other} points exactly the opposite way.
+     *
      * @param other another direction
      * @return true if {@code other} points exactly the opposite way
      */

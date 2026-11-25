@@ -11,6 +11,11 @@ public class SlowCoin extends Coin {
 
     private static final int POINTS = 5;
 
+    /**
+     * Creates a SlowCoin on the given cell.
+     *
+     * @param position the cell the coin is placed on
+     */
     public SlowCoin(Position position) {
         super(position);
     }
