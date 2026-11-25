@@ -35,6 +35,8 @@ public class MainMenuController {
     private ChoiceBox<Level> levelChoice;
 
     /**
+     * Creates a MainMenuController.
+     *
      * @param viewManager used to switch to the game screen and to recall the last choices
      */
     public MainMenuController(ViewManager viewManager) {

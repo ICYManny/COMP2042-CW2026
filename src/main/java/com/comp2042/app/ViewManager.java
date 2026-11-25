@@ -40,6 +40,8 @@ public class ViewManager {
     private GameSettings lastSettings = new GameSettings(20, 20, true, Difficulty.MEDIUM);
 
     /**
+     * Creates a ViewManager.
+     *
      * @param stage the application window
      */
     public ViewManager(Stage stage) {
@@ -87,12 +89,12 @@ public class ViewManager {
         stage.sizeToScene();
     }
 
-    /** @return the levels bundled with the game, in order */
+    /** {@return the levels bundled with the game, in order} */
     public List<Level> getLevels() {
         return levels;
     }
 
-    /** @return the settings of the most recent game, so the menu can show the same choices again */
+    /** {@return the settings of the most recent game, so the menu can show the same choices again} */
     public GameSettings getLastSettings() {
         return lastSettings;
     }

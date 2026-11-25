@@ -98,7 +98,7 @@ public class OverlayPane {
         panel.setVisible(true);
     }
 
-    /** @return the node to place over the board */
+    /** {@return the node to place over the board} */
     public Node getNode() {
         return panel;
     }

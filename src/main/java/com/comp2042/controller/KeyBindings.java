@@ -21,6 +21,12 @@ public class KeyBindings {
     private final Map<KeyCode, GameAction> actions = new EnumMap<>(KeyCode.class);
 
     /**
+     * Creates an empty set of bindings. Use {@link #defaults()} for the standard controls.
+     */
+    public KeyBindings() {
+    }
+
+    /**
      * Creates the default controls: W A S D to steer, P to pause, R to restart,
      * + / - to enter and leave fullscreen, Escape for the menu, Enter to continue.
      *
@@ -67,6 +73,8 @@ public class KeyBindings {
     }
 
     /**
+     * Returns the direction bound to the key, if any.
+     *
      * @param key a pressed key
      * @return the direction bound to the key, if any
      */
@@ -75,6 +83,8 @@ public class KeyBindings {
     }
 
     /**
+     * Returns the action bound to the key, if any.
+     *
      * @param key a pressed key
      * @return the action bound to the key, if any
      */

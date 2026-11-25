@@ -22,12 +22,12 @@ public enum Effect {
         this.durationSeconds = durationSeconds;
     }
 
-    /** @return the name shown on screen */
+    /** {@return the name shown on screen} */
     public String getDisplayName() {
         return displayName;
     }
 
-    /** @return how long the effect lasts once collected */
+    /** {@return how long the effect lasts once collected} */
     public double getDurationSeconds() {
         return durationSeconds;
     }

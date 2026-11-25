@@ -24,6 +24,12 @@ public class Obstacles {
     private final Set<Position> spawned = new LinkedHashSet<>();
 
     /**
+     * Creates an empty board with no walls or obstacles.
+     */
+    public Obstacles() {
+    }
+
+    /**
      * Adds obstacles on random free cells, stopping early if the limit is reached or no
      * free cell is left.
      *
@@ -65,6 +71,8 @@ public class Obstacles {
     }
 
     /**
+     * Returns true if a wall or spawned obstacle is on that cell.
+     *
      * @param cell a grid cell
      * @return true if a wall or spawned obstacle is on that cell
      */
@@ -72,29 +80,29 @@ public class Obstacles {
         return walls.contains(cell) || spawned.contains(cell);
     }
 
-    /** @return a read-only view of the level's fixed walls */
+    /** {@return a read-only view of the level's fixed walls} */
     public Set<Position> getWalls() {
         return Collections.unmodifiableSet(walls);
     }
 
-    /** @return a read-only view of the obstacles spawned during play */
+    /** {@return a read-only view of the obstacles spawned during play} */
     public Set<Position> getSpawned() {
         return Collections.unmodifiableSet(spawned);
     }
 
-    /** @return a read-only set of every blocked cell, walls and spawned obstacles together */
+    /** {@return a read-only set of every blocked cell, walls and spawned obstacles together} */
     public Set<Position> getPositions() {
         Set<Position> all = new LinkedHashSet<>(walls);
         all.addAll(spawned);
         return Collections.unmodifiableSet(all);
     }
 
-    /** @return total number of blocked cells */
+    /** {@return total number of blocked cells} */
     public int count() {
         return walls.size() + spawned.size();
     }
 
-    /** @return number of obstacles spawned during play */
+    /** {@return number of obstacles spawned during play} */
     public int spawnedCount() {
         return spawned.size();
     }

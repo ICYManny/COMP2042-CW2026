@@ -9,6 +9,11 @@ public class GoldCoin extends Coin {
 
     private static final int POINTS = 15;
 
+    /**
+     * Creates a GoldCoin on the given cell.
+     *
+     * @param position the cell the coin is placed on
+     */
     public GoldCoin(Position position) {
         super(position);
     }

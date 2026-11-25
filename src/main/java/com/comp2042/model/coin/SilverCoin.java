@@ -10,6 +10,11 @@ public class SilverCoin extends Coin {
 
     private static final int POINTS = 5;
 
+    /**
+     * Creates a SilverCoin on the given cell.
+     *
+     * @param position the cell the coin is placed on
+     */
     public SilverCoin(Position position) {
         super(position);
     }

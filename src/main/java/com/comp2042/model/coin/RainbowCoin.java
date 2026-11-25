@@ -11,6 +11,11 @@ public class RainbowCoin extends Coin {
 
     private static final int POINTS = 5;
 
+    /**
+     * Creates a RainbowCoin on the given cell.
+     *
+     * @param position the cell the coin is placed on
+     */
     public RainbowCoin(Position position) {
         super(position);
     }

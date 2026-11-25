@@ -22,6 +22,8 @@ public class FreeCellFinder {
     private final Random random;
 
     /**
+     * Creates a FreeCellFinder.
+     *
      * @param width  grid width in cells
      * @param height grid height in cells
      * @param random source of randomness
@@ -33,6 +35,8 @@ public class FreeCellFinder {
     }
 
     /**
+     * Returns a random cell for which {@code blocked} is false, or empty if every cell is blocked.
+     *
      * @param blocked test returning true for cells that may not be used
      * @return a random cell for which {@code blocked} is false, or empty if every cell is blocked
      */

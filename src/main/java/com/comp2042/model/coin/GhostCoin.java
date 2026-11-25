@@ -12,6 +12,11 @@ public class GhostCoin extends Coin {
 
     private static final int POINTS = 5;
 
+    /**
+     * Creates a GhostCoin on the given cell.
+     *
+     * @param position the cell the coin is placed on
+     */
     public GhostCoin(Position position) {
         super(position);
     }

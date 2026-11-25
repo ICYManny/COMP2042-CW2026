@@ -13,6 +13,8 @@ package com.comp2042.model;
 public record Position(int x, int y) {
 
     /**
+     * Returns the neighbouring position one cell away in that direction (may be off the grid).
+     *
      * @param direction direction to move in
      * @return the neighbouring position one cell away in that direction (may be off the grid)
      */
@@ -21,6 +23,8 @@ public record Position(int x, int y) {
     }
 
     /**
+     * Returns true if this position lies on a grid of the given size.
+     *
      * @param width  grid width in cells
      * @param height grid height in cells
      * @return true if this position lies on a grid of the given size
@@ -41,6 +45,8 @@ public record Position(int x, int y) {
     }
 
     /**
+     * Returns the number of horizontal plus vertical steps between the two positions.
+     *
      * @param other another position
      * @return the number of horizontal plus vertical steps between the two positions
      */

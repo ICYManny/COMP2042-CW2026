@@ -13,6 +13,12 @@ public class ActiveEffects {
     private final Map<Effect, Double> remaining = new EnumMap<>(Effect.class);
 
     /**
+     * Creates a tracker with no active effects.
+     */
+    public ActiveEffects() {
+    }
+
+    /**
      * Starts an effect, or restarts its timer if it is already active.
      *
      * @param effect the effect to start
@@ -32,6 +38,8 @@ public class ActiveEffects {
     }
 
     /**
+     * Returns true if the effect is currently active.
+     *
      * @param effect an effect
      * @return true if the effect is currently active
      */
@@ -40,6 +48,8 @@ public class ActiveEffects {
     }
 
     /**
+     * Returns seconds left, or 0 if the effect is not active.
+     *
      * @param effect an effect
      * @return seconds left, or 0 if the effect is not active
      */
@@ -47,7 +57,7 @@ public class ActiveEffects {
         return remaining.getOrDefault(effect, 0.0);
     }
 
-    /** @return a read-only view of every active effect and its remaining seconds */
+    /** {@return a read-only view of every active effect and its remaining seconds} */
     public Map<Effect, Double> getAll() {
         return Collections.unmodifiableMap(remaining);
     }

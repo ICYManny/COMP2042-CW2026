@@ -16,21 +16,23 @@ public abstract class Coin {
     private final Position position;
 
     /**
+     * Creates a coin on the given cell.
+     *
      * @param position the cell the coin is placed on
      */
     protected Coin(Position position) {
         this.position = position;
     }
 
-    /** @return the cell this coin occupies */
+    /** {@return the cell this coin occupies} */
     public Position getPosition() {
         return position;
     }
 
-    /** @return points awarded for eating this coin */
+    /** {@return points awarded for eating this coin} */
     public abstract int getPoints();
 
-    /** @return name of the image used to draw this coin */
+    /** {@return name of the image used to draw this coin} */
     public abstract String getSpriteKey();
 
     /**

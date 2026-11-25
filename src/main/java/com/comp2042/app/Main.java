@@ -10,6 +10,12 @@ import javafx.stage.Stage;
 public class Main extends Application {
 
     /**
+     * Called by JavaFX to create the application.
+     */
+    public Main() {
+    }
+
+    /**
      * Called by JavaFX when the application starts.
      *
      * @param primaryStage the main window created by JavaFX

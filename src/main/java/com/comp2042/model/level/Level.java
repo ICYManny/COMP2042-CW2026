@@ -44,12 +44,12 @@ public record Level(int number, String name, int coinsToClear, double speedMulti
         return new Level(1, "Endless", 0, 1.0, Set.of());
     }
 
-    /** @return true if the level never ends by collecting coins */
+    /** {@return true if the level never ends by collecting coins} */
     public boolean isEndless() {
         return coinsToClear == 0;
     }
 
-    /** @return the text shown in the level drop-down, e.g. "2. Pillars" */
+    /** {@return the text shown in the level drop-down, e.g. "2. Pillars"} */
     @Override
     public String toString() {
         return number + ". " + name;

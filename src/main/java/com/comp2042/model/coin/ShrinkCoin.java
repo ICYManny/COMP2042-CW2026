@@ -11,6 +11,11 @@ public class ShrinkCoin extends Coin {
     private static final int POINTS = 5;
     private static final int SEGMENTS_REMOVED = 3;
 
+    /**
+     * Creates a ShrinkCoin on the given cell.
+     *
+     * @param position the cell the coin is placed on
+     */
     public ShrinkCoin(Position position) {
         super(position);
     }
