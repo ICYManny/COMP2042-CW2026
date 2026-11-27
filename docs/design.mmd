@@ -1,0 +1,161 @@
+---
+title: Snake Game - class diagram (COMP2042, Immanuel Chieng Yi)
+---
+classDiagram
+direction LR
+
+namespace app {
+  class Launcher
+  class Main
+  class ViewManager
+}
+namespace controller {
+  class GameController
+  class MainMenuController
+  class KeyBindings
+  class GameLoop
+  class GameAction
+}
+namespace view {
+  class GameView
+  class OverlayPane
+  class SpriteManager
+  class SoundEffects
+}
+namespace model {
+  class GameModel
+  class GameSettings
+  class GameState
+  class GameListener
+  class Difficulty
+  class WallMode
+  class Snake
+  class Position
+  class Direction
+  class Obstacles
+  class FreeCellFinder
+  class ActiveEffects
+  class Effect
+}
+namespace model_coin {
+  class Coin
+  class CoinFactory
+  class BasicCoin
+  class GoldCoin
+  class SlowCoin
+  class ShrinkCoin
+  class GhostCoin
+  class DoublePointsCoin
+  class RainbowCoin
+  class SilverCoin
+}
+namespace model_level {
+  class Level
+  class LevelLoader
+}
+namespace util {
+  class ResourceLoader
+}
+
+class GameAction{
+  <<enumeration>>
+}
+class GameState{
+  <<enumeration>>
+}
+class Difficulty{
+  <<enumeration>>
+}
+class WallMode{
+  <<enumeration>>
+  +resolve(cell, width, height) Optional~Position~
+}
+class Direction{
+  <<enumeration>>
+}
+class Effect{
+  <<enumeration>>
+}
+class GameSettings{
+  <<record>>
+}
+class Position{
+  <<record>>
+}
+class Level{
+  <<record>>
+}
+class GameListener{
+  <<interface>>
+  +onCoinEaten(coin)
+  +onLevelComplete(level)
+  +onGameOver(won)
+}
+class Coin{
+  <<abstract>>
+  +applyEffect(game)
+}
+class CoinFactory{
+  +create(position, obstaclesPresent) Coin
+}
+
+Launcher ..> Main : starts
+Main ..> ViewManager : creates
+ViewManager ..> MainMenuController : creates
+ViewManager ..> GameController : creates
+ViewManager ..> GameModel : creates
+ViewManager ..> GameView : creates
+ViewManager ..> SoundEffects : creates
+ViewManager ..> LevelLoader : loads levels
+ViewManager "1" --> "1..*" Level
+ViewManager ..> ResourceLoader
+MainMenuController "1" --> "1" ViewManager
+
+GameController "1" --> "1" GameModel
+GameController "1" --> "1" GameView
+GameController "1" *-- "1" KeyBindings
+GameController "1" *-- "1" GameLoop
+KeyBindings ..> GameAction
+KeyBindings ..> Direction
+
+GameView "1" --> "1" GameModel : reads
+GameView "1" *-- "1" OverlayPane
+GameView "1" *-- "1" SpriteManager
+SpriteManager ..> ResourceLoader
+SoundEffects ..|> GameListener
+
+GameModel "1" o-- "0..*" GameListener : notifies
+GameModel "1" --> "1" GameSettings
+GameModel "1" --> "1" GameState
+GameModel "1" --> "1..*" Level
+GameModel "1" *-- "1" Snake
+GameModel "1" *-- "1" Obstacles
+GameModel "1" *-- "1" ActiveEffects
+GameModel "1" *-- "1" FreeCellFinder
+GameModel "1" *-- "1" CoinFactory
+GameModel "1" --> "0..1" Coin : current coin
+GameSettings "1" --> "1" Difficulty
+Difficulty "1" --> "1" WallMode
+Snake "1" --> "2..*" Position : segments
+Snake "1" --> "1" Direction
+Obstacles "1" --> "0..*" Position
+ActiveEffects "1" --> "0..*" Effect
+Level "1" --> "0..*" Position : walls
+LevelLoader ..> Level : creates
+
+Coin <|-- BasicCoin
+Coin <|-- GoldCoin
+Coin <|-- SlowCoin
+Coin <|-- ShrinkCoin
+Coin <|-- GhostCoin
+Coin <|-- DoublePointsCoin
+Coin <|-- RainbowCoin
+Coin <|-- SilverCoin
+Coin "1" --> "1" Position
+Coin ..> GameModel : applyEffect
+CoinFactory ..> Coin : creates
+
+note for CoinFactory "Factory pattern: weighted table of coin types"
+note for GameListener "Observer pattern"
+note for WallMode "Strategy pattern: wall rule chosen per difficulty"
+note for Coin "Polymorphism / Open-Closed: each coin applies its own effect"
