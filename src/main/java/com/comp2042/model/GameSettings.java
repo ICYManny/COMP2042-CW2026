@@ -8,9 +8,11 @@ package com.comp2042.model;
  * @param height          grid height in cells
  * @param powerUpsEnabled whether special coins can appear
  * @param difficulty      speed and wall behaviour
- * @param startLevel      number of the level to start on, from 1
+ * @param startLevel      number of the level to start on, from 1 (ignored in Endless mode)
+ * @param mode            Levels or Endless
  */
-public record GameSettings(int width, int height, boolean powerUpsEnabled, Difficulty difficulty, int startLevel) {
+public record GameSettings(int width, int height, boolean powerUpsEnabled, Difficulty difficulty, int startLevel,
+                           GameMode mode) {
 
     /**
      * Validates the settings.
@@ -27,10 +29,26 @@ public record GameSettings(int width, int height, boolean powerUpsEnabled, Diffi
         if (startLevel < 1) {
             throw new IllegalArgumentException("Start level must be at least 1, was " + startLevel);
         }
+        if (mode == null) {
+            throw new IllegalArgumentException("Game mode must not be null");
+        }
     }
 
     /**
-     * Settings that start on the first level.
+     * Settings for Levels mode starting on a given level.
+     *
+     * @param width           grid width in cells
+     * @param height          grid height in cells
+     * @param powerUpsEnabled whether special coins can appear
+     * @param difficulty      speed and wall behaviour
+     * @param startLevel      number of the level to start on, from 1
+     */
+    public GameSettings(int width, int height, boolean powerUpsEnabled, Difficulty difficulty, int startLevel) {
+        this(width, height, powerUpsEnabled, difficulty, startLevel, GameMode.LEVELS);
+    }
+
+    /**
+     * Settings for Levels mode starting on the first level.
      *
      * @param width           grid width in cells
      * @param height          grid height in cells
