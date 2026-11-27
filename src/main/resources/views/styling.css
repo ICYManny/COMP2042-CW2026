@@ -85,3 +85,18 @@
     -fx-font-size: 13;
     -fx-text-fill: #ffd54f;
 }
+#bestLabel, #modeLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 14;
+    -fx-text-fill: #ffd54f;
+}
+#progressLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 14;
+    -fx-text-fill: #f1f8e9;
+}
+#bestScores {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 14;
+    -fx-text-fill: #1b5e20;
+}
