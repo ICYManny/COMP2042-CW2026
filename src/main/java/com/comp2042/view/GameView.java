@@ -9,6 +9,7 @@ import com.comp2042.model.Snake;
 import com.comp2042.model.WallMode;
 import com.comp2042.model.coin.Coin;
 import com.comp2042.model.level.Level;
+import com.comp2042.model.score.HighScoreTracker;
 import com.comp2042.util.ResourceLoader;
 
 import javafx.geometry.Pos;
@@ -18,6 +19,9 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -30,7 +34,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Draws a {@link GameModel} onto a canvas, with the score and end-of-game labels on top.
+ * Draws a {@link GameModel} onto a canvas, with a score bar above it (score, mode and best
+ * score), a status bar below it (level progress and power-up timers) and the overlay panel.
  * The view only reads the model; it never changes game state. It is redrawn every frame
  * of the game loop, and draws the snake between cells for smooth movement.
  */
@@ -52,6 +57,8 @@ public class GameView {
 
     /** Height of the status bar under the board, in pixels. */
     private static final double HUD_HEIGHT = 44;
+    /** Height of the score bar above the board, in pixels. */
+    private static final double SCORE_BAR_HEIGHT = 30;
     private static final String HUD_STYLE = "-fx-background-color: #2e3b2f;";
 
     private static final String HEAD_SPRITE = "snakehead";
@@ -75,7 +82,11 @@ public class GameView {
     private final StackPane board = new StackPane();
     private final Canvas canvas;
     private final GraphicsContext gc;
+    private final HighScoreTracker highScore;
     private final Label scoreLabel = new Label();
+    private final Label modeLabel = new Label();
+    private final Label bestLabel = new Label();
+    private final Label progressLabel = new Label();
     private final Label effectsLabel = new Label();
     private final OverlayPane overlay = new OverlayPane();
     private GameState shownState;
@@ -85,29 +96,47 @@ public class GameView {
     /**
      * Builds the game screen for a model.
      *
-     * @param model the game to draw
+     * @param model     the game to draw
+     * @param highScore the game's score against the saved best, shown in the top bar
      */
-    public GameView(GameModel model) {
+    public GameView(GameModel model, HighScoreTracker highScore) {
         this.model = model;
+        this.highScore = highScore;
         baseCellSize = model.getHeight() > LARGE_GRID_HEIGHT ? SMALL_CELL_SIZE : LARGE_CELL_SIZE;
         cellSize = baseCellSize;
-        canvas = new Canvas(getPreferredWidth(), getPreferredHeight());
+        canvas = new Canvas(boardWidth(), boardHeight());
         gc = canvas.getGraphicsContext2D();
 
         String css = ResourceLoader.externalForm("/views/styling.css");
         root.getStylesheets().add(css);
         scoreLabel.setId("scoreLabel");
+        bestLabel.setId("bestLabel");
+        modeLabel.setId("modeLabel");
+        progressLabel.setId("progressLabel");
         effectsLabel.setId("effectsLabel");
         board.getChildren().addAll(canvas, overlay.getNode());
         StackPane.setAlignment(overlay.getNode(), Pos.CENTER);
 
+        // score bar on top (every mode): score left, mode and difficulty centred, best right
+        Region leftGap = new Region();
+        Region rightGap = new Region();
+        HBox.setHgrow(leftGap, Priority.ALWAYS);
+        HBox.setHgrow(rightGap, Priority.ALWAYS);
+        HBox scoreBar = new HBox(8, scoreLabel, leftGap, modeLabel, rightGap, bestLabel);
+        scoreBar.setAlignment(Pos.CENTER);
+        scoreBar.setStyle(HUD_STYLE + "-fx-padding: 0 10 0 10;");
+        scoreBar.setPrefHeight(SCORE_BAR_HEIGHT);
+        scoreBar.setMinSize(0, SCORE_BAR_HEIGHT);
+        modeLabel.setText(model.getSettings().mode() + " - " + model.getSettings().difficulty());
+
         // the status bar sits under the board so text never hides the snake or coins
-        VBox hud = new VBox(2, scoreLabel, effectsLabel);
+        VBox hud = new VBox(2, progressLabel, effectsLabel);
         hud.setAlignment(Pos.CENTER);
         hud.setStyle(HUD_STYLE);
         hud.setPrefHeight(HUD_HEIGHT);
         hud.setMinSize(0, HUD_HEIGHT);
 
+        root.setTop(scoreBar);
         root.setCenter(board);
         root.setBottom(hud);
         render();
@@ -123,9 +152,9 @@ public class GameView {
         return model.getWidth() * baseCellSize;
     }
 
-    /** {@return window height needed to show the whole grid and the status bar} */
+    /** {@return window height needed to show the whole grid, the score bar and the status bar} */
     public double getPreferredHeight() {
-        return boardHeight() + HUD_HEIGHT;
+        return boardHeight() + SCORE_BAR_HEIGHT + HUD_HEIGHT;
     }
 
     private double boardWidth() {
@@ -145,7 +174,7 @@ public class GameView {
         double scale = 1;
         if (fullScreen) {
             double xScale = Screen.getPrimary().getBounds().getWidth() / boardWidth();
-            double yScale = (Screen.getPrimary().getBounds().getHeight() - HUD_HEIGHT) / boardHeight();
+            double yScale = (Screen.getPrimary().getBounds().getHeight() - HUD_HEIGHT - SCORE_BAR_HEIGHT) / boardHeight();
             scale = Math.min(xScale, yScale);
         }
         cellSize = baseCellSize * scale;
@@ -163,7 +192,9 @@ public class GameView {
         drawObstacles();
         drawWalls();
 
-        scoreLabel.setText(describeProgress());
+        scoreLabel.setText("Score: " + model.getScore());
+        bestLabel.setText("Best: " + highScore.getBest());
+        progressLabel.setText(describeProgress());
         effectsLabel.setText(describeEffects());
         updateOverlay();
     }
@@ -184,10 +215,10 @@ public class GameView {
     private String describeProgress() {
         Level level = model.getLevel();
         if (level.isEndless()) {
-            return "Score: " + model.getScore();
+            return "Endless: " + model.getCoinsEaten() + " coins eaten";
         }
-        return "Level " + level.number() + "/" + model.getLevelCount() + "   Score: " + model.getScore()
-                + "   Coins: " + model.getCoinsThisLevel() + "/" + level.coinsToClear();
+        return "Level " + level.number() + "/" + model.getLevelCount() + "   Coins: "
+                + model.getCoinsThisLevel() + "/" + level.coinsToClear();
     }
 
     /** Updates the overlay only when the state, score or level changed, not on every frame. */
@@ -197,7 +228,7 @@ public class GameView {
             shownState = model.getState();
             shownScore = model.getScore();
             shownLevel = model.getLevel().number();
-            overlay.show(model);
+            overlay.show(model, highScore);
         }
     }
 

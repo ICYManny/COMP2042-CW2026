@@ -64,10 +64,11 @@ There are no hard-coded file paths. All images, sounds, the stylesheet, the FXML
    The status bar shows each active power-up with its remaining seconds. The original coins are kept: Gold is a 15-point bonus, Rainbow is a 5-second speed-up hazard, and Silver scatters obstacles. With the toggle off, only basic coins appear.
 5. **WASD controls.** All keys are defined in one `KeyBindings` table.
 6. **Five levels** (*Open Field, Pillars, Corridors, Rooms, Maze*), each with its own wall layout, a coin target and a speed multiplier. Clearing a level shows *Level Clear*, and the next level keeps the score. Clearing level 5 wins the game. Levels are plain text files in `src/main/resources/levels/`, so adding one needs no code change. The starting level can be chosen in the main menu.
-7. **Extras:** the coin sound (bundled with the original game but never played) now plays when a coin is eaten. The menu remembers your last choices. The score and timers sit in a status bar under the board instead of covering it.
+7. **Endless mode and high scores.** The menu has a *Mode* choice: *Levels* or *Endless*. Endless is one open board with no target: survive as long as you can for the highest score. Best scores are saved per mode and difficulty (with `java.util.prefs`, so no file paths) and survive closing the game. Every game shows a score bar on top with the current score, the mode and difficulty, and the best score, which rises live once beaten. The menu shows the best score of every mode for the selected difficulty, and Game Over announces a new best. A score is also saved if you restart or leave a game part way.
+8. **Extras:** the coin sound (bundled with the original game but never played) now plays when a coin is eaten. The menu remembers your last choices. The score and timers sit in a status bar under the board instead of covering it.
 
 ### Maintenance (refactoring and bug fixes)
-See *Modified Java Classes* and *Bug fixes* below. The model is covered by **152 JUnit 5 tests** (`mvnw test`).
+See *Modified Java Classes* and *Bug fixes* below. The model is covered by **166 JUnit 5 tests** (`mvnw test`).
 
 ---
 
@@ -75,7 +76,6 @@ See *Modified Java Classes* and *Bug fixes* below. The model is covered by **152
 None known at the time of submission.
 
 ## Features Not Implemented
-- **Persistent high scores.** These were not part of my planned extensions, and I chose to spend the time on tests and documentation instead.
 - **Remappable controls in the UI.** `KeyBindings.bind()` supports rebinding, but there is no settings screen for it.
 
 ---
@@ -111,6 +111,7 @@ None known at the time of submission.
 | `Difficulty` | `model` | Easy / Medium / Hard: speed, wall rule, menu text |
 | `WallMode` | `model` | Wall rule strategy: WRAP_ALL, WRAP_SIDES, SOLID |
 | `GameSettings` | `model` | Immutable menu choices (record) |
+| `GameMode` | `model` | Levels or Endless |
 | `GameState` | `model` | READY, PLAYING, PAUSED, LEVEL_COMPLETE, GAME_OVER, WON |
 | `GameListener` | `model` | Observer interface for coin eaten / level complete / game over |
 | `FreeCellFinder` | `model` | Picks a random free cell; injectable `Random` |
@@ -120,6 +121,9 @@ None known at the time of submission.
 | `CoinFactory` | `model.coin` | Weighted factory that chooses the next coin |
 | `Level` | `model.level` | A level's walls, coin target and speed (record) |
 | `LevelLoader` | `model.level` | Reads and validates `levels/levelN.txt` |
+| `HighScores` | `model.score` | Best score per mode and difficulty |
+| `HighScoreTracker` | `model.score` | Follows one game against the best; saves on game over (a `GameListener`) |
+| `ScoreStore`, `PreferencesScoreStore`, `InMemoryScoreStore` | `model.score` | Where scores are kept: saved per user, or in memory for tests |
 | `SpriteManager` | `view` | Loads and caches sprites by key |
 | `OverlayPane` | `view` | Ready / Paused / Level Clear / Game Over / Won panel with buttons |
 | `SoundEffects` | `view` | Plays the coin sound (a `GameListener`) |
@@ -147,11 +151,11 @@ None known at the time of submission.
 - **MVC:** the model has no JavaFX dependency, the view only reads it, and the controller only translates input and time.
 - **Single Responsibility:** for example `Snake` (body), `FreeCellFinder` (placement), `CoinFactory` (choice), `SpriteManager` (images), `KeyBindings` (controls).
 - **Open/Closed:** new coins, levels, wall rules or key bindings are added without editing existing logic.
-- **Dependency injection:** `ViewManager` goes into controllers, a `Random` into `GameModel` (repeatable tests), and an exit `Runnable` into `GameController`.
+- **Dependency injection:** `HighScores` depends on the `ScoreStore` interface, so tests never touch real saved scores; `ViewManager` goes into controllers, a `Random` into `GameModel` (repeatable tests), and an exit `Runnable` into `GameController`.
 - **Patterns:** *Factory* (`CoinFactory`), *Observer* (`GameListener` → `SoundEffects`), *Strategy* (`WallMode` per `Difficulty`), *State* enum (`GameState`), plus a fixed-time-step game loop.
 
 ### Testing
-152 JUnit 5 tests in `src/test/java` cover normal cases, edge cases and error conditions for every model class and for `KeyBindings`. They include regression tests for the bugs above and a flood-fill test proving every level is completable.
+166 JUnit 5 tests in `src/test/java` cover normal cases, edge cases and error conditions for every model class and for `KeyBindings`. They include regression tests for the bugs above and a flood-fill test proving every level is completable.
 
 ---
 

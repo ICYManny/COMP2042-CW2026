@@ -4,9 +4,13 @@ import com.comp2042.controller.GameController;
 import com.comp2042.controller.MainMenuController;
 import com.comp2042.model.Difficulty;
 import com.comp2042.model.GameModel;
+import com.comp2042.model.GameMode;
 import com.comp2042.model.GameSettings;
 import com.comp2042.model.level.Level;
 import com.comp2042.model.level.LevelLoader;
+import com.comp2042.model.score.HighScoreTracker;
+import com.comp2042.model.score.HighScores;
+import com.comp2042.model.score.PreferencesScoreStore;
 import com.comp2042.util.ResourceLoader;
 import com.comp2042.view.GameView;
 import com.comp2042.view.SoundEffects;
@@ -37,6 +41,7 @@ public class ViewManager {
 
     private final Stage stage;
     private final List<Level> levels = LevelLoader.loadDefaultLevels();
+    private final HighScores highScores = new HighScores(new PreferencesScoreStore());
     private GameSettings lastSettings = new GameSettings(20, 20, true, Difficulty.MEDIUM);
 
     /**
@@ -78,15 +83,27 @@ public class ViewManager {
      */
     public void showGame(GameSettings settings) {
         lastSettings = settings;
-        GameModel model = new GameModel(settings, levels);
-        GameView view = new GameView(model);
+        List<Level> playList = settings.mode() == GameMode.ENDLESS ? List.of(Level.endless()) : levels;
+        GameSettings played = settings.mode() == GameMode.ENDLESS
+                ? new GameSettings(settings.width(), settings.height(), settings.powerUpsEnabled(),
+                        settings.difficulty(), 1, GameMode.ENDLESS)
+                : settings;
+        GameModel model = new GameModel(played, playList);
+        HighScoreTracker highScore = new HighScoreTracker(model, highScores);
+        model.addListener(highScore);
         model.addListener(new SoundEffects());
-        GameController controller = new GameController(model, view, stage, this::showMainMenu);
+        GameView view = new GameView(model, highScore);
+        GameController controller = new GameController(model, view, highScore, stage, this::showMainMenu);
         Scene scene = new Scene(view.getRoot(), view.getPreferredWidth(), view.getPreferredHeight());
         // A filter sees keys before any button does, so the overlay buttons cannot swallow them.
         scene.addEventFilter(KeyEvent.KEY_PRESSED, controller::handle);
         stage.setScene(scene);
         stage.sizeToScene();
+    }
+
+    /** {@return the saved best scores for every mode and difficulty} */
+    public HighScores getHighScores() {
+        return highScores;
     }
 
     /** {@return the levels bundled with the game, in order} */

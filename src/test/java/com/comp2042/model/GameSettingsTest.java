@@ -29,6 +29,19 @@ class GameSettingsTest {
     }
 
     @Test
+    void missingModeIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> new GameSettings(20, 20, false, Difficulty.HARD, 1, null));
+    }
+
+    @Test
+    void shorterConstructorsPlayLevelsMode() {
+        org.junit.jupiter.api.Assertions.assertEquals(GameMode.LEVELS,
+                new GameSettings(20, 20, false, Difficulty.HARD).mode());
+        org.junit.jupiter.api.Assertions.assertEquals(GameMode.LEVELS,
+                new GameSettings(20, 20, false, Difficulty.HARD, 2).mode());
+    }
+
+    @Test
     void smallestAllowedGridIsAccepted() {
         assertDoesNotThrow(() -> new GameSettings(5, 5, true, Difficulty.HARD));
     }

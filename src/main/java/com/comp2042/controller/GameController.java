@@ -2,6 +2,7 @@ package com.comp2042.controller;
 
 import com.comp2042.model.Direction;
 import com.comp2042.model.GameModel;
+import com.comp2042.model.score.HighScoreTracker;
 import com.comp2042.view.GameView;
 
 import javafx.beans.value.ChangeListener;
@@ -25,6 +26,7 @@ public class GameController {
     private final Runnable exitToMenu;
     private final KeyBindings keyBindings = KeyBindings.defaults();
     private final GameLoop loop;
+    private final HighScoreTracker highScore;
     private final ChangeListener<Boolean> fullScreenListener;
 
     /**
@@ -33,11 +35,14 @@ public class GameController {
      *
      * @param model      the game being played
      * @param view       the view drawing that game
+     * @param highScore  saves the score when a game is restarted or left part way
      * @param stage      the window showing the game, used for fullscreen
      * @param exitToMenu action that shows the main menu
      */
-    public GameController(GameModel model, GameView view, Stage stage, Runnable exitToMenu) {
+    public GameController(GameModel model, GameView view, HighScoreTracker highScore, Stage stage,
+                          Runnable exitToMenu) {
         this.model = model;
+        this.highScore = highScore;
         this.view = view;
         this.stage = stage;
         this.exitToMenu = exitToMenu;
@@ -96,8 +101,11 @@ public class GameController {
         }
     }
 
+    /** Starts again. A score from the abandoned game still counts towards the best. */
     private void reset() {
+        highScore.finishRun();
         model.reset();
+        highScore.startRun();
     }
 
     private void setFullScreen(boolean fullScreen) {
@@ -105,6 +113,7 @@ public class GameController {
     }
 
     private void returnToMenu() {
+        highScore.finishRun();
         loop.stop();
         stage.fullScreenProperty().removeListener(fullScreenListener);
         exitToMenu.run();

@@ -2,6 +2,7 @@ package com.comp2042.view;
 
 import com.comp2042.model.GameModel;
 import com.comp2042.model.level.Level;
+import com.comp2042.model.score.HighScoreTracker;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -30,7 +31,7 @@ public class OverlayPane {
     private final Button menuButton = makeButton("Menu");
     private final HBox buttons = new HBox(12);
 
-    /** Builds the panel, hidden until {@link #show(GameModel)} is called. */
+    /** Builds the panel, hidden until {@link #show(GameModel, HighScoreTracker)} is called. */
     public OverlayPane() {
         title.setId("overlayTitle");
         detail.setId("overlayDetail");
@@ -72,19 +73,21 @@ public class OverlayPane {
     /**
      * Shows the right message for the game's state, or hides the panel while playing.
      *
-     * @param model the game to describe
+     * @param model     the game to describe
+     * @param highScore the game's score against the saved best
      */
-    public void show(GameModel model) {
+    public void show(GameModel model, HighScoreTracker highScore) {
         Level level = model.getLevel();
-        String score = "Score: " + model.getScore();
+        String score = "Score: " + model.getScore() + "   Best: " + highScore.getBest();
+        String finalScore = highScore.isNewBest() ? "New best score: " + model.getScore() + "!" : score;
         switch (model.getState()) {
-            case READY -> display(level.isEndless() ? "Ready?" : "Level " + level.number() + ": " + level.name(),
-                    level.isEndless() ? "Press W, A, S or D to start"
+            case READY -> display(level.isEndless() ? "Endless" : "Level " + level.number() + ": " + level.name(),
+                    level.isEndless() ? "Beat " + highScore.getBest() + ". Press W, A, S or D to start"
                             : "Eat " + level.coinsToClear() + " coins. Press W, A, S or D to start");
             case PAUSED -> display("Paused", score + "   (Enter or P to resume)", resumeButton, menuButton);
             case LEVEL_COMPLETE -> display("Level Clear!", score + "   (Enter for the next level)", nextButton, menuButton);
-            case GAME_OVER -> display("Game Over", score + "   (Enter to retry)", retryButton, menuButton);
-            case WON -> display("You Won!", score, retryButton, menuButton);
+            case GAME_OVER -> display("Game Over", finalScore + "   (Enter to retry)", retryButton, menuButton);
+            case WON -> display("You Won!", finalScore, retryButton, menuButton);
             default -> panel.setVisible(false);
         }
     }

@@ -26,6 +26,7 @@ namespace model {
   class GameModel
   class GameSettings
   class GameState
+  class GameMode
   class GameListener
   class Difficulty
   class WallMode
@@ -53,6 +54,13 @@ namespace model_level {
   class Level
   class LevelLoader
 }
+namespace model_score {
+  class HighScores
+  class HighScoreTracker
+  class ScoreStore
+  class PreferencesScoreStore
+  class InMemoryScoreStore
+}
 namespace util {
   class ResourceLoader
 }
@@ -62,6 +70,12 @@ class GameAction{
 }
 class GameState{
   <<enumeration>>
+}
+class GameMode{
+  <<enumeration>>
+}
+class ScoreStore{
+  <<interface>>
 }
 class Difficulty{
   <<enumeration>>
@@ -135,6 +149,17 @@ GameModel "1" *-- "1" FreeCellFinder
 GameModel "1" *-- "1" CoinFactory
 GameModel "1" --> "0..1" Coin : current coin
 GameSettings "1" --> "1" Difficulty
+GameSettings "1" --> "1" GameMode
+ViewManager "1" *-- "1" HighScores
+ViewManager ..> HighScoreTracker : creates
+HighScores "1" --> "1" ScoreStore
+ScoreStore <|.. PreferencesScoreStore
+ScoreStore <|.. InMemoryScoreStore
+HighScoreTracker ..|> GameListener
+HighScoreTracker "1" --> "1" GameModel
+HighScoreTracker "1" --> "1" HighScores
+GameView "1" --> "1" HighScoreTracker : best score
+GameController "1" --> "1" HighScoreTracker
 Difficulty "1" --> "1" WallMode
 Snake "1" --> "2..*" Position : segments
 Snake "1" --> "1" Direction
