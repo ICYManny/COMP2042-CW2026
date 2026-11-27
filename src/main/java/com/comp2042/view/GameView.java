@@ -91,7 +91,7 @@ public class GameView {
         this.model = model;
         baseCellSize = model.getHeight() > LARGE_GRID_HEIGHT ? SMALL_CELL_SIZE : LARGE_CELL_SIZE;
         cellSize = baseCellSize;
-        canvas = new Canvas(getPreferredWidth(), getPreferredHeight());
+        canvas = new Canvas(boardWidth(), boardHeight());
         gc = canvas.getGraphicsContext2D();
 
         String css = ResourceLoader.externalForm("/views/styling.css");
